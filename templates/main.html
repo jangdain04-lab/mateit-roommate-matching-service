@@ -1,0 +1,259 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HUFS Roommate Matching</title>
+
+  <style>
+    :root{
+      --bg:#F6F5FF;
+      --panel:#FAFAFC;
+      --white:#FFFFFF;
+      --text:#101010;
+      --muted:#6f6f6f;
+      --primary:#6C63FF;
+      --primary-700:#5B55FB;
+      --ring:0 0 0 3px rgba(108,99,255,.25);
+      --shadow-1:0 10px 28px rgba(0,0,0,.10);
+    }
+
+    *{ box-sizing:border-box }
+    body{
+      margin:0; background:var(--bg);
+      font-family:"Pretendard","Noto Sans KR",system-ui,sans-serif; color:var(--text);
+    }
+
+    /* ===== Header ===== */
+    .site-header{
+      position:sticky; top:0; z-index:40;
+      backdrop-filter:saturate(140%) blur(0px);
+      background:rgba(255,255,255,.92);
+      border-bottom:1px solid rgba(0,0,0,.06);
+      transition:all .25s ease;
+    }
+    .site-header-inner{
+      max-width:1180px; margin:0 auto; padding:18px 20px;
+      display:flex; align-items:center; justify-content:space-between; gap:16px;
+    }
+    .brand{ display:flex; align-items:center; gap:10px; text-decoration:none; color:inherit; }
+    .brand img{ height:26px; display:block; }
+    .nav{ display:flex; align-items:center; gap:10px; font-weight:700; }
+    .nav a, .nav span{ text-decoration:none; color:#333; padding:4px 6px; border-radius:6px; }
+    .nav a:hover{ color:var(--primary-700); text-decoration:underline; text-underline-offset:4px; }
+    .pipe{ color:#c9c9c9; user-select:none; }
+    .heart{ font-size:18px; line-height:1; display:inline-block; transform:translateY(1px); }
+    .site-header.scrolled{
+      backdrop-filter:saturate(180%) blur(4px); background:rgba(255,255,255,.94);
+      box-shadow:0 6px 18px rgba(0,0,0,.08);
+    }
+    .site-header-inner{ padding-left: 12px; padding-right: 20px; }
+    .site-header.scrolled .site-header-inner{ padding:12px 20px; }
+
+    /* ===== Hero ===== */
+    .hero{ position:relative; overflow:hidden; background:var(--panel); box-shadow:var(--shadow-1); }
+    .hero-inner{
+      max-width:1180px; margin:0 auto;
+      padding:40px 20px 40px;            /* ↓ bottom 더 줄임 (92 → 64) */
+      position:relative; min-height:500px; /* ↓ 전체 높이도 축소 (420 → 380) */
+      display:grid; grid-template-columns:1.1fr 0.9fr; align-items:center;
+    }
+    .hero-left{ position:relative; z-index:2; }
+    .title{
+      font-size:clamp(38px,6vw,68px); font-weight:800; letter-spacing:.4px; margin:0 0 14px;
+      /* 요청: 그림자 더 분명하게 */
+      text-shadow: 0 6px 24px rgba(0,0,0,.16), 0 1px 0 rgba(255,255,255,.55);
+    }
+    .subtitle{ font-size:16px; color:#333; opacity:.9; margin:0; }
+
+    /* 라벤더 일러스트: 공백 0 */
+    .hero-illust-wrap{
+      position:absolute; right:0; bottom:0; z-index:1;
+      width:min(58vw, 740px); pointer-events:none;
+      filter:drop-shadow(0 16px 28px rgba(108,99,255,.20));
+      opacity:.96;
+    }
+    .hero-illust-wrap img{ width:100%; height:auto; display:block; }
+
+    /* ===== Building section — 더 콤팩트 ===== */
+    .buildings{
+      max-width:1100px; margin:60px auto 28px;  /* 상단 8px / 하단 28px */
+      padding:0 20px;
+      display:flex; flex-wrap:wrap; gap:16px;  /* gap 더 축소 */
+      justify-content:center;
+    }
+    .bb{
+      width:168px; height:138px;              /* 210×172 → 168×138 */
+      border-radius:16px; border:1px solid #efeaff;
+      background:linear-gradient(135deg, #A99EF9, #B7AFFB);
+      color:#fff;
+      display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px;
+      font-weight:800; letter-spacing:.2px; cursor:pointer;
+      box-shadow:0 8px 18px rgba(167,155,235,.16);
+      transition:transform .2s ease, filter .2s ease, box-shadow .2s ease;
+      text-decoration: none !important;
+    }
+    .bb:hover{ transform:translateY(-3px); filter:brightness(1.05); box-shadow:0 12px 26px rgba(167,155,235,.20); }
+    .bb-emoji{
+      width:44px; height:44px; border-radius:50%;
+      display:grid; place-items:center; font-size:22px;
+      background:rgba(255,255,255,.15); box-shadow:inset 0 0 0 1px rgba(255,255,255,.28);
+    }
+    .bb small{ display:block; font-size:12px; opacity:.95; }
+
+    /* ===== Entrance motion ===== */
+    .reveal-up, .reveal-right{ opacity:0; transform:translateY(10px);
+      transition:transform .6s cubic-bezier(.2,.7,.2,1), opacity .6s ease; will-change:transform, opacity;
+    }
+    .reveal-right{ transform:translate3d(28px,12px,0); }
+    html.animate-in .reveal-up, html.animate-in .reveal-right{ opacity:1; transform:none; }
+    .buildings .reveal-up:nth-child(1){ transition-delay:.06s }
+    .buildings .reveal-up:nth-child(2){ transition-delay:.12s }
+    .buildings .reveal-up:nth-child(3){ transition-delay:.18s }
+    .buildings .reveal-up:nth-child(4){ transition-delay:.24s }
+    .title.reveal-up{ transition-delay:.04s }
+    .subtitle.reveal-up{ transition-delay:.10s }
+    .hero-illust-wrap.reveal-right{ transition-delay:.16s }
+    @media (prefers-reduced-motion: reduce){
+      .reveal-up,.reveal-right{ opacity:1!important; transform:none!important; transition:none!important; }
+    }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 920px){
+      .hero-inner{ grid-template-columns:1fr; min-height:440px; padding:64px 20px 150px; }
+      .hero-illust-wrap{ right:0; bottom:0; width:min(80vw,540px); }
+    }
+    .info-btn {
+      display:inline-block;
+      margin-top:24px;
+      padding:14px 48px;  /* ← 가로로 길게 */
+      font-weight:700;
+      font-size:16px;
+      border-radius:12px;
+      background:linear-gradient(135deg, #A99EF9, #B7AFFB); /* 연보라 그라데이션 */
+      color:#fff !important;
+      text-decoration:none !important;
+      box-shadow:0 6px 14px rgba(167,155,235,.22);
+      transition:all .2s ease;
+    }
+    .info-btn:hover {
+      transform:translateY(-2px);
+      filter:brightness(1.05);
+      box-shadow:0 10px 20px rgba(167,155,235,.28);
+    }
+
+  </style>
+</head>
+<body>
+  <!-- ===== Header ===== -->
+  <header class="site-header" id="header">
+    <div class="site-header-inner">
+      <a href="{% url 'home' %}" class="brand">
+        <img src="{% static 'images/mateit_logo.png' %}" alt="mate it!" />
+      </a>
+      <nav class="nav">
+        {% if request.user.is_authenticated %}
+          <a href="{% url 'chat_home' %}" class="chat-link">
+             <img src="https://img.icons8.com/ios-filled/28/000000/chat--v1.png" alt="채팅" style="margin-right: 6px;" /></a><span class="pipe">|</span>
+          <a href="{% url 'mypage' %}">My page</a><span class="pipe">|</span>
+          <a href="{% url 'liked_list' %}" class="heart" title="찜 목록">♥</a><span class="pipe">|</span>
+          <span>{{ request.user.student_id }} 님</span><span class="pipe">|</span>
+          <a href="{% url 'logout' %}">Log-out</a>
+        {% else %}
+          <a href="{% url 'login' %}">Login</a><span class="pipe">|</span>
+          <a href="{% url 'signup' %}">Sign-up</a><span class="pipe">|</span>
+          <a href="{% url 'mypage' %}">My page</a><span class="pipe">|</span>
+          <a href="{% url 'liked_list' %}" class="heart" title="찜 목록">♥</a>
+        {% endif %}
+      </nav>
+    </div>
+  </header>
+
+  <!-- ===== Hero ===== -->
+  <section class="hero">
+    <div class="hero-inner">
+      <div class="hero-left">
+        <h1 class="title reveal-up">mate&nbsp;it!</h1>
+        <p class="subtitle reveal-up">나와 맞는 룸메이트를 찾아보세요</p>
+          <a href="{% url 'profile_input' %}" class="info-btn">
+              → 내 정보 입력하기
+          </a>
+      </p>
+      </div>
+    </div>
+    <div class="hero-illust-wrap reveal-right" aria-hidden="true">
+      <img src="{% static 'images/dorm_lavender.png' %}" alt="" />
+    </div>
+  </section>
+
+  <!-- ===== Building selector ===== -->
+  <section class="buildings" aria-label="기숙사 선택">
+      {% if 'A' in allowed_buildings %}
+        <a class="bb reveal-up" href="{% url 'find_roommate' 'A' %}">
+          <span class="bb-emoji">👨</span>A동<small>신기숙사</small>
+        </a>
+      {% else %}
+        <button class="bb reveal-up disabled" type="button">
+          <span class="bb-emoji">👨</span>A동<small>신기숙사</small>
+        </button>
+      {% endif %}
+
+      {# ✅ B/C동 #}
+    {% if 'BC' in allowed_buildings %}
+      <a class="bb reveal-up" href="{% url 'find_roommate' 'BC' %}">
+        <span class="bb-emoji">👩</span>B/C동<small>신기숙사</small>
+      </a>
+    {% else %}
+      <button class="bb reveal-up disabled" type="button">
+        <span class="bb-emoji">👩</span>B/C동<small>신기숙사</small>
+      </button>
+    {% endif %}
+
+      {% if 'D' in allowed_buildings %}
+        <a class="bb reveal-up" href="{% url 'find_roommate' 'D' %}">
+          <span class="bb-emoji">👨</span>D동<small>구기숙사</small>
+        </a>
+      {% else %}
+        <button class="bb reveal-up disabled" type="button">
+          <span class="bb-emoji">👨</span>D동<small>구기숙사</small>
+        </button>
+      {% endif %}
+
+      {% if 'E' in allowed_buildings %}
+        <a class="bb reveal-up" href="{% url 'find_roommate' 'E' %}">
+          <span class="bb-emoji">👩</span>E동<small>구기숙사</small>
+        </a>
+      {% else %}
+        <button class="bb reveal-up disabled" type="button">
+          <span class="bb-emoji">👩</span>E동<small>구기숙사</small>
+        </button>
+      {% endif %}
+    </section>
+
+  <script>
+    // 헤더 스크롤 모션
+    const header = document.getElementById('header');
+    const onScroll = () => { if (window.scrollY > 24) header.classList.add('scrolled'); else header.classList.remove('scrolled'); };
+    document.addEventListener('scroll', onScroll, { passive:true }); onScroll();
+
+    // 이동
+    function goDorm(btn){ window.location.href = `/find_roommate/${btn.dataset.dorm}/`; }
+
+    // Entrance animation trigger
+    function triggerEntrance(){
+      document.documentElement.classList.remove('animate-in');
+      requestAnimationFrame(()=>{ requestAnimationFrame(()=> document.documentElement.classList.add('animate-in')); });
+    }
+    window.addEventListener('DOMContentLoaded', ()=> setTimeout(triggerEntrance, 40));
+    window.addEventListener('pageshow', (e)=> { if(e.persisted) triggerEntrance(); });
+
+    document.addEventListener('click', e=>{
+    const b = e.target.closest('.bb.disabled');
+    if (b){ e.preventDefault(); alert('본인 기숙사만 입장할 수 있어요.'); }
+  });
+  </script>
+</body>
+</html>
+
+<!-- 여기가 주석이에요. 브라우저에는 보이지 않음 -->
