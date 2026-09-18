@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8"><title>학번 입력</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body{font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;background:#f5f0ff;margin:0}
+    .card{background:#fff;padding:28px 24px;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.08);width:340px}
+    h1{font-size:18px;margin:0 0 14px}
+    .muted{color:#666;font-size:13px;margin-bottom:18px}
+    input{width:100%;padding:12px 16px;border:1px solid #ddd;border-radius:10px;font-size:14px;box-sizing: border-box;}
+    button{width:100%;margin-top:14px;padding:12px;border:0;border-radius:12px;background:#7a78ff;color:#fff;font-weight:700;cursor:pointer}
+    .err{color:#d33;font-size:13px;margin:10px 0 0}
+  </style>
+</head>
+<body>
+  <form class="card" method="post">
+    {% csrf_token %}
+
+    <!-- ✅ partial pipeline 이어가기 위해 반드시 포함 -->
+    <input type="hidden" name="partial_token" value="{{ partial_token }}">
+
+    <h1>학번을 입력해 주세요</h1>
+
+
+    <input type="text" name="student_id" placeholder="예) 20201234" value="{{ prefill|default:'' }}" autocomplete="off"
+       autocorrect="off" autocapitalize="off" spellcheck="false" />
+    {% if error %}<p class="err">{{ error }}</p>{% endif %}
+
+    <button type="submit">계속</button>
+  </form>
+</body>
+</html>
