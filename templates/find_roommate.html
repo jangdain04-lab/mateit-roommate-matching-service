@@ -1,0 +1,490 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>내 룸메이트 찾기</title>
+  <link rel="stylesheet" href="{% static 'css/roommate.css' %}">
+  <style>
+    :root{
+      --bg:#F3F0FF; --panel:#F7F5FF; --white:#FFFFFF; --text:#1f1f1f; --muted:#6f6f6f;
+      --primary-700:#5B55FB; --primary-600:#6C63FF; --primary:#7A78FF;
+      --lavender-50:#F9F8FF; --lavender-100:#EDEBFF; --lavender-150:#f2ecff;
+      --shadow-1:0 4px 16px rgba(0,0,0,.10); --shadow-2:0 8px 24px rgba(122,120,255,.25);
+    }
+    *{box-sizing:border-box}
+    body{ margin:0; font-family:'Noto Sans KR',sans-serif; background:var(--bg); color:var(--text); }
+
+    .container{
+      position:relative; display:flex; max-width:1300px; height:calc(100vh - 40px);
+      margin:20px auto; background:var(--white); border-radius:18px; overflow:hidden; box-shadow:var(--shadow-1);
+    }
+    .container-home-btn{ position:absolute; top:18px; right:18px; width:28px; height:28px; z-index:10; }
+    .container-home-btn img{ width:100%; height:100%; display:block; filter:brightness(0); cursor:pointer; }
+
+    .filter-panel{
+      width:30%; padding:28px; background:var(--panel); overflow-y:auto; line-height:1.85; border-right:1px solid #ece9ff;
+    }
+    .filter-header{ margin-bottom:14px; }
+    .filter-header h2{ margin:0; font-size:24px; letter-spacing:.2px; }
+    .filter-sub{ font-size:13px; color:#777; margin:-6px 0 20px 0; }
+
+    /* 버튼 3개를 한 줄에 고정(데스크톱), 모바일에서는 wrap */
+    .btn-group{
+      display:flex;
+      gap:12px;
+      margin:12px 0 22px;
+      flex-wrap:nowrap;
+      align-items:center;
+    }
+    .btn{
+      padding:12px 18px; border-radius:999px; font-size:14px; font-weight:600; letter-spacing:.1px;
+      cursor:pointer; transition:all .2s ease; border:1px solid transparent; outline:none;
+      white-space:nowrap; /* 줄바꿈 방지 */
+    }
+    .btn:focus-visible{ outline:3px solid #d7d3ff; outline-offset:2px; }
+    .btn-primary{ color:#fff; background:linear-gradient(135deg,var(--primary-700),var(--primary)); box-shadow:var(--shadow-2); }
+    .btn-primary:hover{ transform:translateY(-1px); }
+    .btn-ghost{ color:var(--primary-700); background:transparent; border:1px solid #d9d6ff; }
+    .btn-ghost:hover{ background:#f2eeff; }
+
+    .filter-question{ margin:18px 0 26px; }
+    .filter-question strong{ font-weight:700; }
+    .filter-panel input[type=radio]{ accent-color:var(--primary-600); margin-right:6px; }
+    .filter-panel hr{ border:none; height:1px; background:#e8e4ff; margin:16px 0; }
+
+    .roommate-list{
+      flex:1; padding:55px 20px; display:grid; grid-template-columns:repeat(4, 1fr);
+      gap:24px; overflow-y:auto; align-content:flex-start; justify-content:center; background:var(--white);
+    }
+    .empty{
+      grid-column: 1 / -1;
+      text-align: center;
+      color: var(--muted);
+      font-size: 16px;
+      margin: 12px 0 0;
+      white-space: nowrap;
+    }
+
+    .card{
+      width:100%; max-width:240px; height:240px; padding:18px 16px; border-radius:16px;
+      background:var(--lavender-50); box-shadow:0 2px 10px rgba(0,0,0,.08); cursor:pointer;
+      transition:transform .18s ease, box-shadow .18s ease; display:flex; flex-direction:column;
+      justify-content:space-between; position:relative; border:1px solid #efecff;
+    }
+    .card:hover{ transform:translateY(-4px); box-shadow:0 10px 22px rgba(0,0,0,.12); }
+    .emoji{ font-size:32px; text-align:center; width:64px; height:64px; margin:0 auto 12px;
+            background:var(--lavender-100); border-radius:50%; display:flex; align-items:center; justify-content:center; }
+    .nickname{ font-weight:800; font-size:17px; } .age{ font-size:13px; color:#8a8a8a; }
+    .bio{ font-size:14px; color:#363636; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+
+    .like-button{ position:absolute; top:10px; right:10px; font-size:22px; background:none; border:none; cursor:pointer; color:#bdbdbd; transition:transform .15s ease, opacity .15s ease; }
+    .like-button:hover{ transform:scale(1.08); opacity:.9; } .like-button.liked{ color:#ff4d6d; }
+
+    .view-button{
+      padding:7px 12px; font-size:13px; background:var(--lavender-150); color:#4b0082; border:none; border-radius:999px;
+      display:inline-flex; align-items:center; justify-content:center; gap:6px; box-shadow:0 2px 4px rgba(200,160,255,.2);
+      cursor:pointer; width:fit-content; margin:8px auto 2px; transition:transform .15s ease, background .15s ease; white-space:nowrap;
+    }
+    .view-button:hover{ background:#e9defc; transform:translateY(-1px); }
+
+    .popup-background{ position:fixed; inset:0; background:rgba(0,0,0,.4); display:flex; justify-content:center; align-items:center; z-index:999; }
+    .popup-card{ background:var(--white); border-radius:20px; padding:28px; width:420px; max-width:92%; box-shadow:0 12px 40px rgba(0,0,0,.35); position:relative; text-align:center; }
+    .close-btn{ position:absolute; top:14px; right:20px; font-size:24px; cursor:pointer; }
+
+    .filter-panel::-webkit-scrollbar, .roommate-list::-webkit-scrollbar{ width:10px; }
+    .filter-panel::-webkit-scrollbar-thumb, .roommate-list::-webkit-scrollbar-thumb{ background:#dfdbff; border-radius:999px; }
+
+    @media (max-width:1024px){
+      .filter-panel{ width:36%; } .card{ width:46vw; max-width:260px; }
+    }
+    @media (max-width:768px){
+      .container{ flex-direction:column; height:auto; }
+      .filter-panel{ width:100%; border-right:none; border-bottom:1px solid #ece9ff; }
+      .roommate-list{ min-height:60vh; }
+      .btn-group{ flex-wrap:wrap; }  /* 모바일에서는 줄바꿈 */
+      .container-home-btn{ display:none; }
+    }
+
+    .sim-badge{ position:absolute; left:12px; top:12px; z-index:2; background:#fff; color:#5b55fb; border:1px solid #e5e2ff;
+      padding:4px 10px; border-radius:999px; font-size:12px; font-weight:800; box-shadow:0 4px 10px rgba(0,0,0,.08); }
+
+    .card.skeleton .emoji{ opacity:.7; }
+    .card.skeleton .nickname,.card.skeleton .age,.card.skeleton .bio{
+      background:linear-gradient(90deg,#f1edff 0%, #ece8ff 50%, #f1edff 100%); background-size:200% 100%; animation:sheen 1.2s infinite;
+    }
+    @keyframes sheen{ from{background-position:200% 0} to{background-position:-200% 0} }
+
+    /* 추천 모달 */
+    #rec-modal{
+      position:fixed; inset:0; display:none; z-index:1000; background:rgba(0,0,0,.45);
+      align-items:center; justify-content:center; pointer-events:none;
+    }
+    #rec-modal.show{ display:flex; pointer-events:auto; }
+    .rec-card{ width:440px; max-width:92%; background:#fff; border-radius:18px; padding:22px 22px 18px; box-shadow:0 18px 60px rgba(0,0,0,.35); }
+    .rec-title{ font-size:18px; font-weight:800; margin:0 0 8px 0; }
+    .rec-help{ color:#666; font-size:13px; margin:0 0 14px 0; }
+    .rec-row{ display:flex; align-items:center; gap:10px; margin:10px 0 18px; }
+    #th-range{ width:100%; accent-color:var(--primary-600); }
+    #th-val{ font-weight:800; min-width:2ch; text-align:right; }
+    .rec-actions{ display:flex; justify-content:flex-end; gap:8px; margin-top:6px; }
+    .rec-cancel, .rec-confirm{ padding:10px 14px; border-radius:12px; border:1px solid #e7e3ff; cursor:pointer; font-weight:700; }
+    .rec-cancel{ background:#f7f5ff; color:#5B55FB; } .rec-confirm{ background:linear-gradient(135deg,var(--primary-700),var(--primary)); color:#fff; border:none; }
+    .rec-cancel:hover{ background:#efeaff; } .rec-confirm:hover{ filter:brightness(1.02); }
+
+    .popup-background{ z-index:900; }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="container-home-btn">
+      <a href="{% url 'home' %}"><img src="https://img.icons8.com/material-outlined/24/000000/home--v2.png" alt="홈 아이콘"></a>
+    </div>
+
+    <div class="filter-panel">
+      <div class="filter-header"><h2>🔍 룸메이트 조건 필터</h2></div>
+      <p class="filter-sub">룸메이트에게 바라는 생활습관을 고르세요</p>
+
+      <form id="filter-form" method="get" action="{% url 'find_roommate' dorm %}">
+        <div class="btn-group">
+          <button type="submit" class="btn btn-primary">필터 적용</button>
+          <button type="button" id="btn-recommend" class="btn btn-ghost" title="현재 조건으로 추천">추천하기</button>
+          <a href="{% url 'find_roommate' dorm %}" class="btn btn-ghost">전체 초기화</a>
+        </div>
+
+        <!-- 라디오 필드들 (생략 없이 기존 그대로) -->
+        <div class="filter-question">
+          <label><strong>1. 생활 리듬은 어떤 편인가요?</strong></label><br>
+          <input type="radio" name="daily_rhythm" value="morning" {% if request.GET.daily_rhythm == 'morning' %}checked{% endif %}>🌅 아침형 인간이에요<br>
+          <input type="radio" name="daily_rhythm" value="night" {% if request.GET.daily_rhythm == 'night' %}checked{% endif %}>🌙 밤에 더 활동적이에요
+        </div>
+
+        <div class="filter-question">
+          <label><strong>2. 기상 습관은 어떤 편인가요?</strong></label><br>
+          <input type="radio" name="wake_habit" value="hard" {% if request.GET.wake_habit == 'hard' %}checked{% endif %}>⏰ 여러 번 울려야 일어나요<br>
+          <input type="radio" name="wake_habit" value="easy" {% if request.GET.wake_habit == 'easy' %}checked{% endif %}>😴 한 번에 일어나는 편이에요
+        </div>
+
+        <div class="filter-question">
+          <label><strong>3. 주말 생활은 어떤가요?</strong></label><br>
+          <input type="radio" name="weekend_life" value="home" {% if request.GET.weekend_life == 'home' %}checked{% endif %}>🧙‍♂️ 본가에 자주 내려가요<br>
+          <input type="radio" name="weekend_life" value="dorm" {% if request.GET.weekend_life == 'dorm' %}checked{% endif %}>🏠 주말에도 기숙사에 주로 있어요
+        </div>
+
+        <div class="filter-question">
+          <label><strong>4. 잠버릇이 있나요?</strong></label><br>
+          <input type="radio" name="sleep_habit" value="talk" {% if request.GET.sleep_habit == 'talk' %}checked{% endif %}>💤 가끔 잠꼬대를 해요<br>
+          <input type="radio" name="sleep_habit" value="" {% if request.GET.sleep_habit == '' %}checked{% endif %}>🏨 잠버릇 없이 조용히 자는 편이에요
+        </div>
+
+        <div class="filter-question">
+          <label><strong>5. 성격은 어떤 편인가요?</strong></label><br>
+          <input type="radio" name="personality_type" value="calm" {% if request.GET.personality_type == 'calm' %}checked{% endif %}>😑 말수가 적고 차분한 편이에요<br>
+          <input type="radio" name="personality_type" value="talkative" {% if request.GET.personality_type == 'talkative' %}checked{% endif %}>💬 사람들과 대화하는 걸 좋아하는 편이에요
+        </div>
+
+        <div class="filter-question">
+          <label><strong>6. 의견이 다를 때, 어떤 식으로 표현하시나요?</strong></label><br>
+          <input type="radio" name="opinion_style" value="direct" {% if request.GET.opinion_style == 'direct' %}checked{% endif %}>🗣 생각을 솔직하게 바로 표현해요<br>
+          <input type="radio" name="opinion_style" value="indirect" {% if request.GET.opinion_style == 'indirect' %}checked{% endif %}>🫣 돌려서 말하거나 분위기를 살펴요
+        </div>
+
+        <div class="filter-question">
+          <label><strong>7. 개인 공간을 얼마나 중요하게 생각하나요?</strong></label><br>
+          <input type="radio" name="privacy_need" value="important" {% if request.GET.privacy_need == 'important' %}checked{% endif %}>🚪 개인 공간이 매우 중요해요<br>
+          <input type="radio" name="privacy_need" value="not_mind" {% if request.GET.privacy_need == 'not_mind' %}checked{% endif %}>🤷‍♀️ 크게 신경 쓰지 않아요
+        </div>
+
+        <div class="filter-question">
+          <label><strong>8. 냄새에 민감한 편인가요?</strong></label><br>
+          <input type="radio" name="scent_sensitivity" value="sensitive" {% if request.GET.scent_sensitivity == 'sensitive' %}checked{% endif %}>👃 예민한 편이에요<br>
+          <input type="radio" name="scent_sensitivity" value="" {% if request.GET.scent_sensitivity == '' %}checked{% endif %}>🤷‍♂️ 민감하지 않은 편이에요
+        </div>
+
+        <div class="filter-question">
+          <label><strong>9. 방 안에서 이어폰을 사용하시는 편인가요?</strong></label><br>
+          <input type="radio" name="earphone_use" value="often" {% if request.GET.earphone_use == 'often' %}checked{% endif %}>🎧 자주 사용하는 편이에요<br>
+          <input type="radio" name="earphone_use" value="rarely" {% if request.GET.earphone_use == 'rarely' %}checked{% endif %}>🙉 거의 사용하지 않아요
+        </div>
+
+        <div class="filter-question">
+          <label><strong>10. 선호하는 방 온도는 어떤가요?</strong></label><br>
+          <input type="radio" name="preferred_temp" value="warm" {% if request.GET.preferred_temp == 'warm' %}checked{% endif %}>🔥 따뜻한 온도를 좋아해요<br>
+          <input type="radio" name="preferred_temp" value="" {% if request.GET.preferred_temp == '' %}checked{% endif %}>❄️ 시원한 방을 선호해요
+        </div>
+
+        <div class="filter-question">
+          <label><strong>11. 청소 스타일은 어떤 편인가요?</strong></label><br>
+          <input type="radio" name="cleaning_style" value="clean" {% if request.GET.cleaning_style == 'clean' %}checked{% endif %}>🧹 청소를 중요하게 생각하고, 자주 해요<br>
+          <input type="radio" name="cleaning_style" value="" {% if request.GET.cleaning_style == '' %}checked{% endif %}>🛁 청소에 크게 신경 쓰지 않는 편이에요
+        </div>
+
+        <div class="filter-question">
+          <label><strong>12. 공부는 주로 어디서 하나요?</strong></label><br>
+          <input type="radio" name="study_place" value="dorm" {% if request.GET.study_place == 'dorm' %}checked{% endif %}>🏡 기숙사에서 공부해요<br>
+          <input type="radio" name="study_place" value="library" {% if request.GET.study_place == 'library' %}checked{% endif %}>📚 도서관 및 밖에서 공부해요
+        </div>
+
+        <div class="filter-question">
+          <label><strong>13. 주로 언제 씻으시나요?</strong></label><br>
+          <input type="radio" name="shower_time" value="morning" {% if request.GET.shower_time == 'morning' %}checked{% endif %}>☀️ 주로 아침에 씻어요<br>
+          <input type="radio" name="shower_time" value="night" {% if request.GET.shower_time == 'night' %}checked{% endif %}>🌙 주로 밤에 씻어요
+        </div>
+
+        <div class="filter-question">
+          <label><strong>14. 공용물건 구매에 대해 어떻게 생각하시나요?</strong></label><br>
+          <input type="radio" name="shared_item_opinion" value="okay" {% if request.GET.shared_item_opinion == 'okay' %}checked{% endif %}>🤝 함께 구매해서 사용하고 싶어요<br>
+          <input type="radio" name="shared_item_opinion" value="no" {% if request.GET.shared_item_opinion == 'no' %}checked{% endif %}>🙋‍♀️ 각자 구매해서 사용하고 싶어요
+        </div>
+
+        <div class="filter-question">
+          <label><strong>15. 술자리/외출 빈도는 어느 정도인가요?</strong></label><br>
+          <input type="radio" name="outing_frequency" value="frequent" {% if request.GET.outing_frequency == 'frequent' %}checked{% endif %}>🌌 자주 있어요<br>
+          <input type="radio" name="outing_frequency" value="rare" {% if request.GET.outing_frequency == 'rare' %}checked{% endif %}>🛏️ 가끔만 있어요
+        </div>
+
+        <div class="filter-question">
+          <label><strong>16. 흡연 여부는?</strong></label><br>
+          <input type="radio" name="smoking" value="no" {% if request.GET.smoking == 'no' %}checked{% endif %}>🚭 비흡연자예요<br>
+          <input type="radio" name="smoking" value="yes" {% if request.GET.smoking == 'yes' %}checked{% endif %}>🚬 흡연자예요
+        </div>
+
+        {% if dorm in "AD" %}
+        <div class="filter-question">
+          <label><strong>17. 군필 여부는?</strong></label><br>
+          <input type="radio" name="military" value="yes" {% if request.GET.military == 'yes' %}checked{% endif %}>🪖 군필<br>
+          <input type="radio" name="military" value="no" {% if request.GET.military == 'no' %}checked{% endif %}>🤝 미필
+        </div>
+        {% endif %}
+      </form>
+    </div>
+
+    <!-- 리스트 -->
+    <div class="roommate-list" id="roommate-list"
+         data-detail-template="{% url 'get_profile' 12345 %}">
+      {% for profile in profiles %}
+        <div class="card">
+          <button class="like-button {% if profile.is_liked %}liked{% endif %}" data-user-id="{{ profile.id }}">
+            {% if profile.is_liked %}❤️{% else %}🤍{% endif %}
+          </button>
+          <div class="emoji">{{ profile.profile_emoji|default:"👤" }}</div>
+          <div class="nickname">{{ profile.nickname }}</div>
+          <div class="age">{{ profile.birth_year }}년생</div>
+          <div class="bio">{{ profile.intro_sentence }}</div>
+          <button class="view-button"
+                  data-user-id="{{ profile.id }}"
+                  data-url="{% url 'get_profile' profile.id %}">🔍 자세히 보기</button>
+        </div>
+      {% empty %}
+        <p class="empty">조건에 맞는 룸메이트가 없습니다.</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- 상세 팝업 -->
+  <div id="profile-popup" class="popup-background" style="display:none;">
+    <div class="popup-card">
+      <span class="close-btn">&times;</span>
+      <div id="popup-content"></div>
+    </div>
+  </div>
+
+  <!-- 추천 설정 모달 -->
+  <div id="rec-modal">
+    <div class="rec-card">
+      <h3 class="rec-title">추천 기준 설정</h3>
+      <p class="rec-help">유사도 임계값을 조절하세요. 낮출수록 더 많은 후보가 나옵니다.</p>
+      <div class="rec-row">
+        <input type="range" id="th-range" min="0" max="100" value="50" step="1">
+        <span><strong id="th-val">50</strong>%</span>
+      </div>
+      <div class="rec-actions">
+        <button id="rec-cancel" class="rec-cancel">취소</button>
+        <button id="rec-confirm" class="rec-confirm">추천 보기</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      /* 라디오 두 번 클릭 시 해제 */
+      document.querySelectorAll('.filter-panel input[type=radio]').forEach(radio => {
+        let wasChecked = false;
+        radio.addEventListener('mousedown', () => wasChecked = radio.checked);
+        radio.addEventListener('click', () => { if (wasChecked) radio.checked = false; });
+      });
+
+      /* 좋아요 토글 */
+      function bindLikeButtons(scope=document){
+        scope.querySelectorAll('.like-button').forEach(btn => {
+          btn.onclick = (e) => {
+            e.preventDefault();
+            const id = btn.dataset.userId;
+            const liked = btn.classList.contains('liked');
+            fetch(`/like/${id}/`, {
+              method: 'POST',
+              headers: { 'X-CSRFToken': '{{ csrf_token }}','Content-Type': 'application/json' },
+              body: JSON.stringify({ action: liked ? 'unlike' : 'like' })
+            })
+              .then(r => r.json())
+              .then(data => {
+                if (data.success) {
+                  btn.classList.toggle('liked');
+                  btn.textContent = btn.classList.contains('liked') ? '❤️' : '🤍';
+                }
+              });
+          };
+        });
+      }
+      bindLikeButtons(document);
+
+      /* 상세보기 (이벤트 위임) */
+      const listEl = document.getElementById('roommate-list');
+      const DETAIL_TPL = listEl.dataset.detailTemplate || '/get_profile/12345/';
+      const makeDetailUrl = (id) => DETAIL_TPL.replace(/12345\/?$/, String(id) + '/');
+
+      const popup = document.getElementById('profile-popup');
+      const popupContent = document.getElementById('popup-content');
+      document.querySelector('.close-btn').onclick = () => popup.style.display = 'none';
+      document.getElementById('profile-popup').onclick = (e)=>{ if(e.target.id==='profile-popup') e.currentTarget.style.display='none'; };
+
+      listEl.addEventListener('click', async (e) => {
+        const btn = e.target.closest('.view-button');
+        if (!btn) return;
+
+        let url = btn.dataset.url;
+        const userId = btn.dataset.userId;
+        if (!url && userId) url = makeDetailUrl(userId);
+        if (!url) { alert('프로필 링크가 유효하지 않습니다. (ID 누락)'); return; }
+
+        try{
+          const res = await fetch(url, { headers:{'Accept':'application/json'} });
+          if(!res.ok) throw new Error(`HTTP ${res.status}`);
+          const data = await res.json();
+
+          popupContent.innerHTML = `
+            <div style="display:flex; align-items:center; gap:24px;">
+              <div style="font-size:72px;">${data.profile_emoji || "👤"}</div>
+              <div style="text-align:left;">
+                <h2 style="margin:0;">${data.nickname || ""}</h2>
+                <div style="display:grid; grid-template-columns:110px auto; gap:6px 16px; font-size:16px; margin-top:10px;">
+                  <div><strong>학년/학기</strong></div><div>${data.semester || ""}</div>
+                  <div><strong>나이</strong></div><div>${data.birth_year || ""}년생</div>
+                  <div><strong>성별</strong></div><div>${data.gender || ""}</div>
+                  <div><strong>기숙사</strong></div><div>${data.dorm_type || ""}</div>
+                </div>
+              </div>
+            </div>
+            <div style="margin-top:20px; display:flex; flex-wrap:wrap; gap:10px;">
+              ${(data.keyword_tags || '')
+                .split(' ')
+                .filter(Boolean)
+                .map(tag => `<span style="background:#eee9fb; color:#5f4d9d; font-size:13px; padding:6px 12px; border-radius:16px;">${tag}</span>`)
+                .join('')}
+            </div>`;
+          popup.style.display = 'flex';
+        }catch(err){
+          console.error('[get_profile failed]', url, err);
+          alert('프로필을 불러오지 못했습니다.');
+        }
+      });
+
+      /* 추천 기능 */
+      let currentThreshold = 0.5;   // 0 ~ 1
+      let currentSeed = Date.now();
+
+      const recModal = document.getElementById('rec-modal');
+      const thRange  = document.getElementById('th-range');
+      const thVal    = document.getElementById('th-val');
+      const filterForm = document.getElementById('filter-form');
+
+      if (thRange){
+        thVal.textContent = thRange.value;
+        thRange.addEventListener('input', () => { thVal.textContent = thRange.value; });
+      }
+
+      document.getElementById('btn-recommend').onclick = ()=> recModal.classList.add('show');
+      document.getElementById('rec-cancel').onclick    = ()=> recModal.classList.remove('show');
+      document.getElementById('rec-confirm').onclick   = ()=>{
+        recModal.classList.remove('show');
+        currentThreshold = parseInt(thRange.value, 10) / 100;
+        loadRecommendations(true);
+      };
+
+      function setLoading(){
+        listEl.querySelectorAll('.card, .empty').forEach(n=>n.remove());
+        for(let i=0;i<8;i++){
+          const sk = document.createElement('div');
+          sk.className='card skeleton';
+          sk.innerHTML = `
+            <div class="emoji">⏳</div>
+            <div class="nickname" style="height:16px;border-radius:6px;"></div>
+            <div class="age" style="height:12px;border-radius:6px;"></div>
+            <div class="bio" style="height:32px;border-radius:6px;"></div>`;
+          listEl.appendChild(sk);
+        }
+      }
+
+      // 현재 필터값 → 추천 API 쿼리스트링
+      function buildRecQuery(){
+        const params = new URLSearchParams();
+        params.set('threshold', String(currentThreshold));
+        params.set('seed', String(currentSeed));
+        params.set('limit', '8');
+
+        const fd = new FormData(filterForm);
+        for (const [k, v] of fd.entries()){
+          if (v !== '') params.append(k, v);
+        }
+        return params.toString();
+      }
+
+      function renderRecommendations(data){
+        listEl.querySelectorAll('.card, .empty').forEach(n=>n.remove());
+
+        if(!data || !data.length){
+          const p = document.createElement('p');
+          p.className='empty';
+          p.textContent='추천 결과가 없습니다. 기준을 낮춰보세요.';
+          listEl.appendChild(p);
+          return;
+        }
+
+        data.forEach(p=>{
+          const pid = String(p.id ?? p.profile_id ?? p.user_id ?? p.profile_pk ?? '');
+          const detailUrl = pid ? makeDetailUrl(pid) : '';
+          const card = document.createElement('div');
+          card.className='card';
+          card.innerHTML = `
+            <span class="sim-badge">유사도 ${(p.similarity*100).toFixed(0)}%</span>
+            <button class="like-button ${p.is_liked?'liked':''}" data-user-id="${pid}">${p.is_liked?'❤️':'🤍'}</button>
+            <div class="emoji">${p.profile_emoji || "👤"}</div>
+            <div class="nickname">${p.nickname || ""}</div>
+            <div class="age">${p.birth_year || ""}년생</div>
+            <div class="bio">${p.intro_sentence || ""}</div>
+            <button class="view-button" data-user-id="${pid}" data-url="${detailUrl}">🔍 자세히 보기</button>`;
+          listEl.appendChild(card);
+        });
+
+        bindLikeButtons(listEl);
+      }
+
+      function loadRecommendations(refresh=false){
+        if(refresh) currentSeed = Date.now();
+        setLoading();
+        const qs = buildRecQuery();
+        fetch(`/api/recommendations?${qs}`)
+          .then(res => res.json())
+          .then(renderRecommendations)
+          .catch(()=>{
+            listEl.querySelectorAll('.card').forEach(n=>n.remove());
+            const p = document.createElement('p'); p.className='empty';
+            p.textContent='추천을 불러오지 못했습니다.';
+            listEl.appendChild(p);
+          });
+      }
+    });
+  </script>
+</body>
+</html>
