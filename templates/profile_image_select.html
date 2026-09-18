@@ -1,0 +1,160 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>프로필 사진 선택</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: "Pretendard", sans-serif;
+    }
+
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .modal-container {
+      width: 800px;
+      height: auto;
+      background-color: white;
+      border: 8px solid #7f74ee;
+      border-radius: 20px;
+      padding: 40px 50px 50px 50px;
+      position: relative;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+
+    .modal-header h3 {
+      margin: 0;
+      font-size: 18px;
+      color: #333;
+    }
+
+    .close-btn {
+      font-size: 24px;
+      font-weight: bold;
+      color: #999;
+      cursor: pointer;
+      transition: all 0.2s ease-in-out;
+    }
+
+    .close-btn:hover {
+      transform: scale(1.2);
+      color: #666;
+    }
+
+    .profile-options {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 30px;
+      margin: 60px 0 70px 0;
+    }
+
+    .profile-radio {
+      appearance: none;
+      border: none;
+      background: none;
+    }
+
+    .profile-icon {
+      width: 130px;
+      height: 130px;
+      border-radius: 50%;
+      background-color: #e6e3fb;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: transform 0.3s ease;
+      font-size: 62px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    .profile-icon:hover {
+      transform: translateY(-6px);
+      cursor: pointer;
+      filter: brightness(1.05);
+    }
+
+    .profile-radio:checked + .profile-icon {
+      outline: 4px solid #7f74ee;
+    }
+
+    .select-btn {
+      background-color: #7f74ee;
+      color: white;
+      font-size: 15px;
+      font-weight: bold;
+      padding: 12px 30px;
+      border: none;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: block;
+      margin: 0 auto;
+      box-shadow: 0 8px 15px rgba(106, 90, 205, 0.25);
+    }
+
+    .select-btn:hover {
+      transform: translateY(-4px);
+      filter: brightness(1.05);
+    }
+  </style>
+</head>
+<body>
+  <div class="overlay">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3>프로필 사진 선택</h3>
+        <span class="close-btn" onclick="window.history.back();">&times;</span>
+      </div>
+
+      <form method="POST" action="{% url 'profile_image_select' %}">
+        {% csrf_token %}
+        <div class="profile-options">
+          <label>
+            <input type="radio" name="profile_image" value="🐶" class="profile-radio" required>
+            <div class="profile-icon">🐶</div>
+          </label>
+          <label>
+            <input type="radio" name="profile_image" value="😺" class="profile-radio">
+            <div class="profile-icon">😺</div>
+          </label>
+          <label>
+            <input type="radio" name="profile_image" value="🐻" class="profile-radio">
+            <div class="profile-icon">🐻</div>
+          </label>
+          <label>
+            <input type="radio" name="profile_image" value="🦊" class="profile-radio">
+            <div class="profile-icon">🦊</div>
+          </label>
+          <label>
+            <input type="radio" name="profile_image" value="🐹" class="profile-radio">
+            <div class="profile-icon">🐹</div>
+          </label>
+        </div>
+
+        <button type="submit" class="select-btn">프로필 사진 선택</button>
+      </form>
+    </div>
+  </div>
+</body>
+</html>
