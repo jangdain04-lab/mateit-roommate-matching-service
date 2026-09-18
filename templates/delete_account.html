@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <title>계정 탈퇴</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    /* ====== 컬러 토큰 (연보라 배경 고정) ====== */
+    :root{
+      --bg:#eee7ff;          /* 연보라 배경 (고정) */
+      --card:#ffffff;        /* 카드 배경 */
+      --muted:#6b6b6b;       /* 설명 텍스트 */
+      --text:#111111;        /* 본문 텍스트 */
+      --accent:#7a78ff;      /* 포커스 링 */
+      --danger:#ef4444;      /* 삭제 버튼 */
+      --danger-press:#dc2626;
+      --border:#e7e7e7;      /* 테두리 */
+      --shadow:0 20px 60px rgba(0,0,0,.12);
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+
+    body{
+      margin:0;
+      font-family:system-ui, -apple-system, Segoe UI, Roboto, Noto Sans KR, sans-serif;
+      background:var(--bg); color:var(--text);
+      display:flex; align-items:center; justify-content:center;
+      padding:24px;
+    }
+
+    .card{
+      width:clamp(320px, 92vw, 520px);
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:20px;
+      box-shadow:var(--shadow);
+      padding:24px 24px 20px;
+      animation:rise .25s ease-out;
+    }
+    @keyframes rise{from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:none}}
+
+    h1{font-size:22px; margin:2px 0 8px}
+    p.desc{margin:0 0 16px; color:var(--muted); line-height:1.55}
+    .list{margin:6px 0 16px; color:var(--muted); font-size:14px; padding-left:18px}
+    .list li{margin:4px 0}
+    .label{font-size:14px; margin:4px 0 14px; color:var(--muted)}
+
+    /* ====== 입력 필드 (좌우 여백 동일) ====== */
+    .field{ position:relative;margin-top: 16px; }
+    input[type="text"]{
+      display:block;
+      width:calc(100% - 20px);            /* 카드 내부 좌우 여백과 균형 */
+      margin:0 auto;                      /* 좌우 중앙 정렬 → 동일 여백 */
+      padding:12px 44px 12px 14px;        /* 오른쪽은 체크아이콘 공간 */
+      font-size:15px;
+      background:transparent; color:var(--text);
+      border:1.5px solid var(--border); border-radius:12px; outline:none;
+      transition:border .18s, box-shadow .18s, transform .04s;
+    }
+    input[type="text"]:focus{
+      border-color:var(--accent);
+      box-shadow:0 0 0 4px color-mix(in oklab, var(--accent) 20%, transparent);
+    }
+    .ok{
+      position:absolute; right:22px; top:50%; transform:translateY(-50%);
+      font-size:18px; opacity:0; transition:opacity .18s;
+      pointer-events:none;
+    }
+    .ok.show{opacity:.9}
+
+    .row{display:flex; gap:10px; margin-top:16px}
+    .btn{
+      flex:1; padding:12px; border:0; border-radius:12px; cursor:pointer;
+      font-weight:700; font-size:15px; transition:transform .06s, filter .12s, background .12s;
+      text-align:center; text-decoration:none;
+      display:inline-flex; align-items:center; justify-content:center;
+    }
+    .btn:active{transform:translateY(1px)}
+    .ghost{background:#ececf9; color:#222}
+    .danger{background:var(--danger); color:#fff}
+    .danger:disabled{opacity:.45; cursor:not-allowed; filter:grayscale(.2)}
+    .danger:not(:disabled):hover{filter:brightness(1.03)}
+    .danger:not(:disabled):active{background:var(--danger-press)}
+
+    .err{margin-top:10px; color:var(--danger); font-size:13px; min-height:18px}
+
+    /* 오입력 시 살짝 흔들림 */
+    .shake{animation:shake .28s ease}
+    @keyframes shake{
+      10%, 90% {transform:translateX(-1px)}
+      20%, 80% {transform:translateX(2px)}
+      30%, 50%, 70% {transform:translateX(-4px)}
+      40%, 60% {transform:translateX(4px)}
+    }
+  </style>
+</head>
+<body>
+  <form class="card" method="post" id="deleteForm">
+    {% csrf_token %}
+    <h1>계정 탈퇴</h1>
+    <p class="desc">탈퇴 시 아래 정보가 모두 삭제됩니다.</p>
+    <ul class="list">
+      <li>채팅 기록</li>
+      <li>찜 목록</li>
+      <li>프로필</li>
+      <li>소셜 연동</li>
+    </ul>
+
+    <div class="label">확인 문구로 <b style="color:var(--danger)">DELETE</b> 를 입력해 주세요.</div>
+    <div class="field">
+      <input type="text" name="confirm" id="confirmInput" placeholder="DELETE" autocomplete="off" inputmode="latin" />
+      <div class="ok" id="okIcon">✓</div>
+    </div>
+    <div class="err" id="errorBox">{% if error %}{{ error }}{% endif %}</div>
+
+    <div class="row">
+      <a class="btn ghost" href="{% url 'home' %}">취소</a>
+      <button class="btn danger" type="submit" id="deleteBtn" disabled>영구 삭제</button>
+    </div>
+  </form>
+
+  <script>
+    const input = document.getElementById('confirmInput');
+    const btn   = document.getElementById('deleteBtn');
+    const ok    = document.getElementById('okIcon');
+    const form  = document.getElementById('deleteForm');
+    const err   = document.getElementById('errorBox');
+
+    function validate(){
+      const okText = input.value.trim().toUpperCase() === 'DELETE';
+      btn.disabled = !okText;
+      ok.classList.toggle('show', okText);
+      if (okText) err.textContent = '';
+    }
+    input.addEventListener('input', validate);
+    validate();
+
+    // Enter = 제출, Esc = 취소
+    document.addEventListener('keydown', (e)=>{
+      if (e.key === 'Escape') window.location.href = "{% url 'home' %}";
+      if (e.key === 'Enter' && btn.disabled) {
+        form.classList.remove('shake'); void form.offsetWidth; form.classList.add('shake');
+        e.preventDefault();
+      }
+    });
+
+    // 서버 에러가 있으면 흔들기
+    {% if error %} form.classList.add('shake'); {% endif %}
+  </script>
+</body>
+</html>
