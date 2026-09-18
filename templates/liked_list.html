@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>찜한 룸메이트 리스트</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: "Pretendard", sans-serif;
+      background-color: #ece9ff;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 30px auto;
+      padding: 30px 40px;
+      background-color: #ffffff;
+      border-radius: 24px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+    }
+
+    h2 {
+      font-size: 22px;
+      margin-bottom: 20px;
+      color: #222;
+    }
+
+    .wishlist-container {
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+    }
+
+    .wishlist-card {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #f6f4ff;
+      padding: 24px 32px;
+      border-radius: 18px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      position: relative;
+    }
+
+    .profile-section {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .emoji-circle {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background-color: #e0dcfc;
+      font-size: 42px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .info-text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .nickname-age {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 6px;
+    }
+
+    .keyword {
+      background-color: #e6e3fb;
+      border-radius: 12px;
+      padding: 6px 12px;
+      font-size: 13px;
+      color: #444;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .tags {
+      font-size: 14px;
+      color: #555;
+    }
+
+    .heart-chat-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .heart-icon {
+      font-size: 28px;
+      color: #e04e7d;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    .heart-icon:hover {
+      transform: scale(1.2);
+    }
+
+    .chat-button {
+      padding: 8px 16px;
+      font-size: 14px;
+      background-color: #7f74ee;
+      color: white;
+      border: none;
+      border-radius: 30px;
+      cursor: pointer;
+      box-shadow: 0 6px 14px rgba(127, 116, 238, 0.3);
+      transition: background-color 0.2s ease;
+
+      display: inline-flex;       
+      align-items: center;          
+      gap: 6px;                     
+      white-space: nowrap;          
+    }
+
+    .chat-button:hover {
+      background-color: #6e63d9;
+    }
+
+    .top-nav {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 10px;
+    }
+
+    .home-button {
+      width: 30px;
+      height: 30px;
+    }
+
+    .home-button img {
+      width: 100%;
+      filter: brightness(0);
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="top-nav">
+      <a href="/" class="home-button">
+        <img src="https://img.icons8.com/material-outlined/24/000000/home--v2.png" alt="홈으로" />
+      </a>
+    </div>
+
+    <h2>💗 찜한 룸메이트 리스트</h2>
+
+    <div class="wishlist-container">
+      {% for item in profiles %}
+          {% with profile=item.profile %}
+          <div class="wishlist-card">
+            <div class="profile-section">
+              <div class="emoji-circle">{{ profile.profile_emoji|default:"👤" }}</div>
+              <div class="info-text">
+                <div class="nickname-age">{{ profile.nickname }} / {{ profile.birth_year }}</div>
+                <div class="tags">
+                  <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px;">
+                    {% for tag in profile.keyword_tags.split %}
+                      <div class="keyword">{{ tag }}</div>
+                    {% endfor %}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="heart-chat-section">
+              <div class="heart-icon" onclick="removeLike({{ profile.id }}, this)">❤️</div>
+              <button class="chat-button" onclick="goChat({{ profile.user.id }})">
+                💬 <span style="white-space: nowrap;">{{ profile.nickname }}{{ item.josa }} 채팅하기</span>
+              </button>
+            </div>
+          </div>
+          {% endwith %}
+        {% endfor %}
+    </div>
+  </div>
+
+  <script>
+    function removeCard(heartElement) {
+      const card = heartElement.closest('.wishlist-card');
+      card.remove();
+    }
+
+    function goChat(profileId) {
+      window.location.href = `/chat/${profileId}/`;
+    }
+
+    function goHome() {
+      window.location.href = '/';
+    }
+
+    function removeLike(profileId, btn) {
+    fetch(`/like/${profileId}/`, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': '{{ csrf_token }}',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ action: 'unlike' })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        btn.closest('.wishlist-card').remove();
+      } else {
+        alert("찜 해제에 실패했습니다.");
+      }
+    });
+  }
+  </script>
+</body>
+</html>
