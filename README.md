@@ -107,3 +107,12 @@ python manage.py runserver
 ## What I Learned
 
 이 프로젝트를 통해 서비스기획에서 중요한 것은 처음 정한 기능을 끝까지 지키는 것이 아니라, **사용자가 실제로 무엇을 기준으로 선택하는지 검증하고 그 결과를 제품 구조에 반영하는 것**이라는 기준을 갖게 됐습니다.
+
+---
+
+## Portfolio Projects
+
+- [SafePath · Crowd Safety System](https://github.com/jangdain04-lab/safepath-crowd-safety-system)
+- [Mate It · Roommate Matching Service](https://github.com/jangdain04-lab/mateit-roommate-matching-service)
+- [Book Recommendation Platform](https://github.com/jangdain04-lab/book-recommendation-platform)
+
