@@ -1,0 +1,465 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>프로필 입력</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: "Pretendard", sans-serif;
+      background-color: #E6E0FF;
+      background-size: cover;
+      height: 100%;
+    }
+    .wrapper {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      padding: 40px 20px 40px;
+      box-sizing: border-box;
+    }
+    .form-container {
+      display: flex;
+      flex-direction: column;
+      max-width: 1200px;
+      width: 100%;
+      background-color: rgba(255, 255, 255, 0.95);
+      border-radius: 30px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+      padding: 60px 50px;
+      box-sizing: border-box;
+      position: relative;
+    }
+    .home-btn-inside {
+      position: absolute;
+      top: 20px;
+      right: 30px;
+      width: 30px;
+      height: 30px;
+    }
+    .home-btn-inside img {
+      width: 100%;
+      filter: brightness(0);
+      cursor: pointer;
+    }
+    .panel-row {
+      display: flex;
+      flex-direction: row;
+    }
+    .left-panel, .right-panel {
+      flex: 1;
+      padding: 0 30px;
+      box-sizing: border-box;
+    }
+    .divider {
+      width: 3px;
+      background-color: #CBB7FF;
+      margin: 40px 0;
+      border-radius: 2px;
+    }
+    .left-panel h2, .right-panel h2 {
+      margin-top: 0;
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 20px;
+    }
+    .left-panel label {
+      font-weight: 600;
+      margin: 20px 0 8px;
+      font-size: 15px;
+    }
+    .left-panel input[type="text"],
+    .left-panel select,
+    .left-panel textarea {
+      width: 100%;
+      padding: 12px 15px;
+      margin-top: 10px;
+      margin-bottom: 20px;
+      border-radius: 10px;
+      border: 1.5px solid #ddd;
+      font-size: 15px;
+      box-sizing: border-box;
+    }
+    .left-panel textarea {
+      height: 90px;
+    }
+    .left-panel input[type="radio"] {
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+    .left-panel .radio-group {
+      margin-top: 8px;
+      margin-left: 10px;
+      margin-bottom: 20px;
+    }
+    .left-panel .radio-group label {
+      font-weight: 500;
+      margin-right: 20px;
+      cursor: pointer;
+    }
+    .left-panel .error-text {
+      font-size: 13px;
+      color: red;
+      margin-top: -10px;
+      margin-bottom: 14px;
+      font-weight: 500;
+      display: block;
+    }
+
+    .right-panel ol {
+      counter-reset: question-counter;
+      margin: 0;
+      list-style: none;
+      border-radius: 10px;
+      padding: 25px 40px 25px 30px;
+      box-sizing: border-box;
+    }
+    .right-panel ol > li {
+      margin-bottom: 18px;
+      font-weight: 700;
+      font-size: 17px;
+      position: relative;
+      counter-increment: question-counter;
+      padding-left: 35px;
+    }
+    .right-panel ol > li::before {
+      content: counter(question-counter) ". ";
+      position: absolute;
+      left: 0;
+      font-weight: 700;
+      font-size: 16px;
+      color: #333;
+    }
+    .right-panel ol > li label {
+      font-weight: 500;
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      margin-top: 5px;
+      margin-bottom: 5px;
+    }
+    .bottom-button-wrapper {
+      width: 100%;
+      padding: 20px 0 0;
+      display: flex;
+      justify-content: center;
+    }
+    .bottom-button-wrapper button {
+      width: 300px;
+      background-color: #9675ff;
+      border: none;
+      color: white;
+      font-size: 18px;
+      font-weight: 600;
+      padding: 15px 0;
+      border-radius: 15px;
+      cursor: pointer;
+    }
+
+    .msg-modal {
+      border: 0; padding: 0; background: transparent;
+      overflow: hidden;
+    }
+    @keyframes fade { from{opacity:0} to{opacity:1} }
+
+    /* 카드 */
+    .msg-card {
+      position: relative;
+      min-width: 340px;
+      max-width: 540px;
+      background: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 12px 36px rgba(0,0,0,0.18);
+      border: 2px solid #eae7ff;
+      padding: 22px 22px;
+    }
+
+    .msg-close {
+      position: absolute;
+      top: 8px;
+      right: 10px;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      border: none;
+      outline: none;
+      background-color: #9675ff;
+      color: white;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .msg-close:hover {
+      background-color: #7a5de6;
+}
+
+    .msg-line {
+      font-weight: 700;
+      text-align: center;
+      padding: 14px 12px;
+      border-radius: 12px;
+      background: #f1edff;
+      color: #5b55fb;
+      font-size: 16px;
+    }
+
+    .msg-line.success { background: #f1edff; color: #5b55fb; }
+    .msg-line.error { background: #ffeef0; color: #b1002e; }
+    .msg-card::before,
+    .msg-card::after {
+      content: none !important;
+      background: none !important;
+    }
+    
+    .msg-card {
+      background-image: none !important;
+      box-shadow: none !important; /* 그림자 제거 */
+    }
+
+  </style>
+</head>
+<body>
+
+<div class="wrapper">
+  <form method="post" action="{% url 'profile_input' %}" class="form-container" id="profile-form" autocomplete="off">
+    {% csrf_token %}
+    <a href="{% url 'home' %}" class="home-btn-inside">
+      <img src="https://img.icons8.com/material-outlined/24/000000/home--v2.png" alt="홈으로">
+    </a>
+
+    <div class="panel-row">
+      <div class="left-panel">
+        <h2>내 정보 입력하기</h2>
+
+        <label for="nickname">닉네임</label>
+        <input type="text" id="nickname" name="nickname" placeholder="닉네임을 입력하세요"
+               value="{{ form.nickname.value|default_if_none:'' }}" />
+
+        <label for="semester">학년-학기 선택</label>
+        <select id="semester" name="semester">
+          <option value="" disabled {% if not form.semester.value %}selected{% endif %}>학기를 선택하세요</option>
+          {% for sem in semesters %}
+          <option value="{{ sem }}" {% if form.semester.value == sem %}selected{% endif %}>{{ sem|slice:":1" }}학년 {{ sem|slice:"2:" }}학기</option>
+          {% endfor %}
+        </select>
+        <div id="semester-warning" class="error-text" style="display: none;">1학년 1학기에는 룸메이트 배정을 할 수 없습니다.</div>
+
+        <label for="birth_year">나이 (출생년도)</label>
+         <select id="birth_year" name="birth_year">
+           <option value="" disabled {% if not form.birth_year.value %}selected{% endif %}>출생년도를 선택하세요</option>
+           {% for year in birth_years %}
+           <option value="{{ year }}" {% if form.birth_year.value|stringformat:"s" == year|stringformat:"s" %}selected{% endif %}>{{ year }}년생</option>
+           {% endfor %}
+         </select>
+
+        <label>성별</label>
+        <div class="radio-group">
+          <label><input type="radio" name="gender" value="남성"
+            {% if form.gender.value == "남성" %}checked{% endif %}
+            onclick="toggleMilitary(true)" /> 남성</label>
+          <label><input type="radio" name="gender" value="여성"
+            {% if form.gender.value == "여성" %}checked{% endif %}
+            onclick="toggleMilitary(false)" /> 여성</label>
+        </div>
+
+        <label>기숙사 종류</label>
+        <div class="radio-group">
+          <label><input type="radio" name="dorm_type" value="신기숙사"
+            {% if form.dorm_type.value == "신기숙사" %}checked{% endif %} /> 신기숙사</label>
+          <label><input type="radio" name="dorm_type" value="구기숙사"
+            {% if form.dorm_type.value == "구기숙사" %}checked{% endif %} /> 구기숙사</label>
+        </div>
+
+        <label for="intro_sentence">나를 표현하는 한 문장</label>
+        <div style="position: relative;">
+          <textarea id="intro_sentence" name="intro_sentence" maxlength="10"
+          placeholder="나를 소개하는 짧은 문장을 입력하세요">{{ form.intro_sentence.value|default_if_none:'' }}</textarea>
+
+          <div id="intro-counter" style="position: absolute; bottom: 8px; right: 12px; font-size: 12px; color: #999;">
+            {{ form.intro_sentence.value|length|default:0 }} / 10
+          </div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+
+    <div class="right-panel">
+      <h2>생활 스타일 선택하기</h2>
+      <ol>
+        <li>생활 리듬은 어떤 편인가요?
+          <label><input type="radio" name="daily_rhythm" value="morning" {% if form.daily_rhythm.value == 'morning' %}checked{% endif %} /> 🌅 아침형 인간이에요</label>
+          <label><input type="radio" name="daily_rhythm" value="night" {% if form.daily_rhythm.value == 'night' %}checked{% endif %} /> 🌙 밤에 더 활동적이에요</label>
+        </li>
+        <li>기상 습관은 어떤 편인가요?
+          <label><input type="radio" name="wake_habit" value="hard" {% if form.wake_habit.value == 'hard' %}checked{% endif %} /> ⏰ 여러 번 울려야 일어나요</label>
+          <label><input type="radio" name="wake_habit" value="easy" {% if form.wake_habit.value == 'easy' %}checked{% endif %} /> 😴 한 번에 일어나는 편이에요</label>
+        </li>
+        <li>주말 생활은 어떤가요?
+          <label><input type="radio" name="weekend_life" value="home" {% if form.weekend_life.value == 'home' %}checked{% endif %} /> 🧙‍♂️ 본가에 자주 내려가요</label>
+          <label><input type="radio" name="weekend_life" value="dorm" {% if form.weekend_life.value == 'dorm' %}checked{% endif %} /> 🏠 주말에도 기숙사에 주로 있어요</label>
+        </li>
+        <li>잠버릇이 있나요?
+          <label><input type="radio" name="sleep_habit" value="talk" {% if form.sleep_habit.value == 'talk' %}checked{% endif %} /> 💤 가끔 잠꼬대를 해요</label>
+          <label><input type="radio" name="sleep_habit" value="quiet" {% if form.sleep_habit.value == 'quiet' %}checked{% endif %} /> 🏨 잠버릇 없이 조용히 자는 편이에요</label>
+        </li>
+        <li>성격은 어떤 편인가요?
+          <label><input type="radio" name="personality_type" value="calm" {% if form.personality_type.value == 'calm' %}checked{% endif %} /> 😑 말수가 적고 차분한 편이에요</label>
+          <label><input type="radio" name="personality_type" value="talkative" {% if form.personality_type.value == 'talkative' %}checked{% endif %} /> 💬 사람들과 대화하는 걸 좋아하는 편이에요</label>
+        </li>
+        <li>의견이 다를 때 어떻게 표현하시나요?
+          <label><input type="radio" name="opinion_style" value="direct" {% if form.opinion_style.value == 'direct' %}checked{% endif %} /> 🗣 생각을 솔직하게 바로 표현해요</label>
+          <label><input type="radio" name="opinion_style" value="indirect" {% if form.opinion_style.value == 'indirect' %}checked{% endif %} /> 🫣 돌려서 말하거나 분위기를 살펴요</label>
+        </li>
+        <li>개인 공간을 얼마나 중요하게 생각하나요?
+          <label><input type="radio" name="privacy_need" value="important" {% if form.privacy_need.value == 'important' %}checked{% endif %} /> 🚪 개인 공간이 매우 중요해요</label>
+          <label><input type="radio" name="privacy_need" value="not_mind" {% if form.privacy_need.value == 'not_mind' %}checked{% endif %} /> 🤷‍♀️ 크게 신경 쓰지 않아요</label>
+        </li>
+        <li>냄새에 민감한 편인가요?
+          <label><input type="radio" name="scent_sensitivity" value="sensitive" {% if form.scent_sensitivity.value == 'sensitive' %}checked{% endif %} /> 👃 예민한 편이에요</label>
+          <label><input type="radio" name="scent_sensitivity" value="not_sensitive" {% if form.scent_sensitivity.value == 'not_sensitive' %}checked{% endif %} /> 🤷‍♂️ 민감하지 않은 편이에요</label>
+        </li>
+        <li>방 안에서 이어폰을 사용하시는 편인가요?
+          <label><input type="radio" name="earphone_use" value="often" {% if form.earphone_use.value == 'often' %}checked{% endif %} /> 🎧 자주 사용하는 편이에요</label>
+          <label><input type="radio" name="earphone_use" value="rarely" {% if form.earphone_use.value == 'rarely' %}checked{% endif %} /> 🙉 거의 사용하지 않아요</label>
+        </li>
+        <li>선호하는 방 온도는 어떤가요?
+          <label><input type="radio" name="preferred_temp" value="warm" {% if form.preferred_temp.value == 'warm' %}checked{% endif %} /> 🔥 따뜻한 온도를 좋아해요</label>
+          <label><input type="radio" name="preferred_temp" value="cool" {% if form.preferred_temp.value == 'cool' %}checked{% endif %} /> ❄️ 시원한 방을 선호해요</label>
+        </li>
+        <li>청소 스타일은 어떤 편인가요?
+          <label><input type="radio" name="cleaning_style" value="clean" {% if form.cleaning_style.value == 'clean' %}checked{% endif %} /> 🧹 나는 청소를 중요하게 생각하고, 자주 해요</label>
+          <label><input type="radio" name="cleaning_style" value="not_clean" {% if form.cleaning_style.value == 'not_clean' %}checked{% endif %} /> 🛁 나는 청소에 크게 신경 쓰지 않는 편이에요</label>
+        </li>
+        <li>공부는 주로 어디서 하나요?
+          <label><input type="radio" name="study_place" value="dorm" {% if form.study_place.value == 'dorm' %}checked{% endif %} /> 🏡 기숙사에서 공부해요</label>
+          <label><input type="radio" name="study_place" value="library" {% if form.study_place.value == 'library' %}checked{% endif %} /> 📚 도서관 및 밖에서 공부해요</label>
+        </li>
+        <li>주로 언제 씻으시나요?
+          <label><input type="radio" name="shower_time" value="morning" {% if form.shower_time.value == 'morning' %}checked{% endif %} /> ☀️ 주로 아침에 씻어요</label>
+          <label><input type="radio" name="shower_time" value="night" {% if form.shower_time.value == 'night' %}checked{% endif %} /> 🌙 주로 밤에 씻어요</label>
+        </li>
+        <li>공용물건 구매에 대해 어떻게 생각하시나요?
+          <label><input type="radio" name="shared_item_opinion" value="okay" {% if form.shared_item_opinion.value == 'okay' %}checked{% endif %} /> 🤝 함께 구매해서 사용하고 싶어요</label>
+          <label><input type="radio" name="shared_item_opinion" value="no" {% if form.shared_item_opinion.value == 'no' %}checked{% endif %} /> 🙋‍♀️ 각자 구매해서 사용하고 싶어요</label>
+        </li>
+        <li>술자리나 외출은 얼마나 자주 있나요?
+          <label><input type="radio" name="outing_frequency" value="frequent" {% if form.outing_frequency.value == 'frequent' %}checked{% endif %} /> 🌌 술자리나 외출이 잦고 밤늦게 들어오는 편이에요</label>
+          <label><input type="radio" name="outing_frequency" value="rare" {% if form.outing_frequency.value == 'rare' %}checked{% endif %} /> 🛏 가끔만 마시고 일찍 귀가하는 편이에요</label>
+        </li>
+        <li>흡연 여부는 어떻게 되시나요?
+          <label><input type="radio" name="smoking" value="no" {% if form.smoking.value == 'no' %}checked{% endif %} /> 🚭 비흡연자예요</label>
+          <label><input type="radio" name="smoking" value="yes" {% if form.smoking.value == 'yes' %}checked{% endif %} /> 🚬 흡연자예요</label>
+        </li>
+        <li id="military-question" style="display: none;">군필 여부는 어떻게 되시나요?
+          <label><input type="radio" name="military" value="yes" {% if form.military.value == 'yes' %}checked{% endif %} /> 🪖 군필</label>
+          <label><input type="radio" name="military" value="no" {% if form.military.value == 'no' %}checked{% endif %} /> 🤝 미필</label>
+        </li>
+      </ol>
+    </div>
+  </div>
+    <div class="bottom-button-wrapper">
+      <button type="submit">{% if is_edit %}수정하기{% else %}저장하기{% endif %}</button>
+    </div>
+
+      <!-- ✅ 저장/수정 알림 모달 -->
+    <dialog id="msgModal" class="msg-modal">
+      <div class="msg-card">
+        <button type="button" class="msg-close" aria-label="닫기">×</button>
+        {% if messages %}
+          {% for message in messages %}
+            <div class="msg-line {{ message.tags }}">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+      </div>
+    </dialog>
+  </form>
+</div>
+
+<script>
+  function toggleMilitary(show) {
+    const military = document.getElementById('military-question');
+    if (show) {
+      military.style.display = 'block';
+    } else {
+      military.style.display = 'none';
+      const radios = military.querySelectorAll('input[type="radio"]');
+      radios.forEach(r => r.checked = false);
+    }
+  }
+
+  document.getElementById('intro_sentence').addEventListener('input', (event) => {
+    const len = event.target.value.length;
+    document.getElementById('intro-counter').textContent = `${len} / 10`;
+  });
+
+  const semesterSelect = document.getElementById('semester');
+  const warningText = document.getElementById('semester-warning');
+  const submitBtn = document.querySelector('.bottom-button-wrapper button');
+
+  semesterSelect.addEventListener('change', () => {
+    if (semesterSelect.value === '1-1') {
+      warningText.style.display = 'block';
+      submitBtn.disabled = true;
+      submitBtn.style.opacity = 0.5;
+      submitBtn.style.cursor = 'not-allowed';
+    } else {
+      warningText.style.display = 'none';
+      submitBtn.disabled = false;
+      submitBtn.style.opacity = 1;
+      submitBtn.style.cursor = 'pointer';
+    }
+  });
+
+  window.addEventListener('DOMContentLoaded', () => {
+    const gender = document.querySelector('input[name="gender"]:checked');
+    if (gender && gender.value === '남성') {
+      toggleMilitary(true);
+    }
+
+    setTimeout(function () {
+      const alerts = document.querySelectorAll('.alert');
+      alerts.forEach(alert => {
+        alert.style.display = 'none';
+      });
+    }, 5000);
+  });
+
+  // 메시지가 있으면 자동으로 모달 오픈
+  window.addEventListener('DOMContentLoaded', () => {
+    const modal = document.getElementById('msgModal');
+    const hasMessage = modal.querySelectorAll('.msg-line').length > 0;
+
+    if (hasMessage) {
+      if (typeof modal.showModal === 'function') {
+        modal.showModal();
+      } else {
+        // 일부 구형 브라우저 대비
+        modal.setAttribute('open', '');
+      }
+      // 4초 뒤 자동 닫기 (원하면 시간 조절)
+      setTimeout(() => { if (modal.open) modal.close(); }, 4000);
+    }
+
+    // 닫기 버튼 / 바깥 클릭 닫기
+    modal.querySelector('.msg-close')?.addEventListener('click', () => modal.close());
+    modal.addEventListener('click', (e) => {
+      const rect = modal.querySelector('.msg-card').getBoundingClientRect();
+      const inDialog = (e.clientX >= rect.left && e.clientX <= rect.right &&
+                        e.clientY >= rect.top  && e.clientY <= rect.bottom);
+      if (!inDialog) modal.close();
+    });
+  });
+</script>
+
+</body>
+</html>
