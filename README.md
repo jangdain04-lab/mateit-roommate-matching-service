@@ -2,6 +2,8 @@
 
 > 기숙사 룸메이트를 **자동으로 정해주는 서비스가 아니라, 사용자가 자신의 기준으로 비교하고 선택할 수 있도록 돕는 탐색·매칭 서비스**입니다.
 
+[Notion Portfolio ↗](https://lush-echo-8d0.notion.site/Service-Business-Planning-Portfolio-3dde2258cda6804b8c96fcae751252b9)
+
 **Project** 2025 HUFS Engineering Academic Festival  
 **Period** 2025.04–2025.12  
 **Role** PM · Service Planning · Development  
