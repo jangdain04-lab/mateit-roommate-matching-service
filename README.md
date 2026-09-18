@@ -84,7 +84,7 @@ mateit-roommate-matching-service/
 └── .env.example
 ```
 
-> 이 저장소는 채용 포트폴리오용 공개본입니다. 개인정보, 운영 DB, 실제 인증정보 및 배포 비밀값은 포함하지 않습니다.
+> 이 저장소는 포트폴리오용 공개본입니다. 개인정보, 운영 DB, 실제 인증정보 및 배포 비밀값은 포함하지 않습니다.
 
 ## Getting Started
 
