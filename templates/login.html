@@ -1,0 +1,224 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HUFS Roommate Matching</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: "Pretendard", sans-serif;
+    }
+
+    body {
+      display: flex;
+      height: 100vh;
+    }
+
+    .left-panel {
+      width: 50%;
+      background: url("{% static 'images/background.png' %}") no-repeat center center;
+      background-size: cover;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      color: white;
+      position: relative;
+      padding: 2rem;
+    }
+
+    .left-panel::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: rgba(0, 0, 0, 0.4);
+      z-index: 0;
+    }
+
+    .left-panel .content {
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .left-panel h1 {
+      font-size: 2rem;
+      font-weight: bold;
+      margin-bottom: 24px;
+    }
+
+    .left-panel .logo {
+      width: 220px;
+      margin-bottom: 20px;
+    }
+
+    .left-panel p {
+      font-size: 1rem;
+      color: #f0f0f0;
+      line-height: 1.6;
+    }
+
+    .right-panel {
+      width: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem;
+    }
+
+    .form-container {
+      width: 100%;
+      max-width: 380px;
+    }
+
+    h2 {
+      font-size: 1.6rem;
+      font-weight: bold;
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 600;
+      color: #444;
+      font-size: 0.9rem;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 8px;
+      border: none;
+      border-bottom: 2px solid #ccc;
+      font-size: 1rem;
+    }
+
+    input:focus {
+      outline: none;
+      border-bottom: 2px solid #7a5ef7;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 10px;  
+      background-color: #6d78f7;
+      color: white;
+      border: none;
+      padding: 14px;
+      border-radius: 30px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+    }
+
+    button:hover {
+      background-color: #5c66dc;
+    }
+
+    .signup-link {
+      text-align: center;
+      margin-top: 1.5rem;
+      font-size: 0.9rem;
+    }
+
+    .signup-link a {
+      color: #6d4dff;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    .signup-link a:hover {
+      text-decoration: underline;
+    }
+
+    .error-message {
+      color: red;
+      font-size: 0.9rem;
+      margin-top: 1px;
+      margin-bottom: 10px;
+    }
+    
+    .error-message { 
+      transition: opacity .35s ease; /* 부드럽게 사라짐 */
+    }
+    .error-message.fade-out {
+      opacity: 0;
+    }
+    
+    
+  </style>
+</head>
+<body>
+  <div class="left-panel">
+    <div class="content">
+      <h1>Roommate matching</h1>
+      <img src="{% static 'images/logo.png' %}" alt="HUFS Logo" class="logo" />
+      <p>한국외대 글캠 학생들을 위한<br>기숙사 룸메이트 매칭 플랫폼</p>
+      <p style="margin-top: 10px;">This platform is a dorm roommate matching platform<br>for global campus students at HUFS</p>
+    </div>
+  </div>
+
+  <div class="right-panel">
+    <div class="form-container">
+      <h2>Log-in</h2>
+      <form method="post" autocomplete="off">
+          {% csrf_token %}
+
+          <input type="text" style="display:none" autocomplete="username">
+          <input type="password" style="display:none" autocomplete="new-password">
+
+          <label for="studentId">ID</label>
+          <input id="studentId" type="text" name="studentId" placeholder="학번 (ID)" required
+                 value="{{ studentId|default:'' }}" autocomplete="off" autocapitalize="off" spellcheck="false">
+          {% if id_error %}
+            <p class="error-message id-error" style="text-align:left;margin-top:2px;">{{ id_error }}</p>
+          {% endif %}
+
+          <label for="password">PW</label>
+          <input id="password" type="password" name="password" placeholder="비밀번호 (PW)" required autocomplete="new-password">
+          {% if pw_error %}
+            <p class="error-message pw-error">{{ pw_error }}</p>
+          {% endif %}
+
+          <button type="submit">LOGIN</button>
+        </form>
+    
+    <!-- 소셜 로그인 버튼 시작 -->
+        <div style="margin: 18px 0; text-align:center; color:#888;">또는</div>
+
+        <a href="{% url 'social:begin' 'google-oauth2' %}?next=/" style="text-decoration:none;">
+          <button type="button" style="width:100%;background:#ffffff;color:#444;border:1px solid #ddd;
+                  padding:12px;border-radius:30px;font-size:0.95rem;font-weight:600;cursor:pointer;margin-bottom:10px;">
+            구글로 로그인
+          </button>
+        </a>
+
+        <!-- 소셜 로그인 버튼 끝 -->
+
+      <div class="signup-link">
+        계정이 없으신가요? <a href="{% url 'signup' %}">회원가입</a>
+      </div>
+    </div>
+
+  </div>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const pwError = document.querySelector(".pw-error");
+    if (pwError) {
+      setTimeout(() => {
+        pwError.style.display = "none";
+      }, 4500); // 5초 후 사라짐
+    }
+  });
+</script>
+</body>
+</html>
