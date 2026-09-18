@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.urls import path, include
-from mateit import views  # mateit 앱의 뷰들 임포트
+from mateit import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -17,19 +17,12 @@ urlpatterns = [
     path('get_profile/<int:user_id>/', views.get_profile, name='get_profile'),
 
     path("api/recommendations/", views.recommendations_api, name="recommendations_api"),
-
-
-    # ✅ 채팅 관련
     path('chat/', views.chat_home_view, name='chat_home'),
     path('chat/<int:user_id>/', views.chat_room_view, name='chat_room'),
     path('chat/<int:user_id>/send/', views.send_message_view, name='send_message'),
     path('delete_message/<int:message_id>/', views.delete_message_view, name='delete_message'),
     path('chat/<int:user_id>/poll/', views.fetch_messages, name='chat_poll'),
-    # ✅ 소셜 로그인 (python‑social‑auth)
     path('auth/', include('social_django.urls', namespace='social')),
-
-
-    # ✅ 학번 1회 입력 페이지 (구글 최초 로그인 시)
     path('oauth/ask-student-id/', views.ask_student_id, name='ask_student_id'),
 
     path('account/delete/', views.delete_account_view, name='delete_account'),
