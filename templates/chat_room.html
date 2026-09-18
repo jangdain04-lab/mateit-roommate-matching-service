@@ -1,0 +1,1280 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mate Talk</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: "Pretendard", sans-serif;
+      background-color: #f5f0ff;
+    }
+
+    .chat-wrapper {
+      display: flex;
+      max-width: 1200px;
+      height: 650px;
+      margin: 40px auto;
+      background: white;
+      border-radius: 30px;
+      box-shadow: 0 0 20px rgba(150, 117, 255, 0.2);
+      overflow: hidden;
+    }
+
+    .chat-sidebar {
+      width: 300px;
+      background-color: #f4eeff;
+      padding: 30px 20px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .chat-list {
+      flex: 1;
+      overflow-y: auto;
+      margin-top: 10px;
+    }
+
+    .sidebar-title {
+      font-size: 22px;
+      font-weight: bold;
+      color: #5e4bdb;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    .chat-user {
+      background: white;
+      border: 2px solid #c7bfff;
+      border-radius: 15px;
+      padding: 12px 15px;
+      margin-bottom: 15px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: 0.2s;
+    }
+
+    .chat-user:hover {
+      background: #ebe5ff;
+    }
+
+    .chat-user .name {
+      font-weight: bold;
+      font-size: 15px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 180px;
+    }
+
+    .chat-user .unread {
+      background-color: #d6c8ff;
+      color: black;
+      border-radius: 50%;
+      padding: 4px 9px;
+      font-size: 13px;
+      font-weight: bold;
+    }
+
+    .chat-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 30px;
+      background: #f9f7ff;
+    }
+
+    .chat-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 25px;
+      font-weight: bold;
+      color: #7b6df0;
+      margin-bottom: 20px;
+    }
+
+    .chat-favorite-button {
+      font-size: 16px;
+      font-weight: bold;
+      color: #a248ff;
+      text-decoration: none;
+      padding-left: 10px;
+    }
+
+    .chat-favorite-button:hover {
+      text-decoration: underline;
+    }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 450px;
+    }
+
+    .message {
+      max-width: 70%;
+      padding: 10px 15px;
+      border-radius: 20px;
+      font-size: 15px;
+      line-height: 1.5;
+    }
+
+    .message.outgoing {
+      background-color: #d1c4e9;
+      align-self: flex-end;
+      text-align: right;
+    }
+
+    .message.incoming {
+      background-color: #f3e5f5;
+      align-self: flex-start;
+      text-align: left;
+    }
+    
+    /* 공통: 채팅 목록 + 채팅창 모두 적용 */
+    .chat-list,
+    .chat-messages {
+      /* Firefox용 */
+      scrollbar-width: thin;
+      scrollbar-color: #dfdbff transparent;
+    }
+    
+    /* Webkit 계열(Chrome, Edge, Safari) */
+    .chat-list::-webkit-scrollbar,
+    .chat-messages::-webkit-scrollbar {
+      width: 10px; /* 필터 패널과 동일한 두께 */
+    }
+    
+    .chat-list::-webkit-scrollbar-track,
+    .chat-messages::-webkit-scrollbar-track {
+      background: transparent; /* 트랙 투명 */
+    }
+    
+    .chat-list::-webkit-scrollbar-thumb,
+    .chat-messages::-webkit-scrollbar-thumb {
+      background: #dfdbff;       /* 필터 패널과 동일한 연보라색 */
+      border-radius: 999px;      /* 완전 둥글게 */
+    }
+    
+    .chat-list::-webkit-scrollbar-thumb:hover,
+    .chat-messages::-webkit-scrollbar-thumb:hover {
+      background: #c7bfff;       /* hover 시 조금 진하게 */
+    }
+    
+    /* 화살표 버튼 제거 + 공간 제거 */
+    .chat-messages::-webkit-scrollbar-button:start:decrement,
+    .chat-messages::-webkit-scrollbar-button:end:increment,
+    .chat-list::-webkit-scrollbar-button:start:decrement,
+    .chat-list::-webkit-scrollbar-button:end:increment {
+      display: none;
+      width: 0;
+      height: 0;
+    }
+    
+    /* 스크롤바 끝 모서리 제거 */
+    .chat-messages::-webkit-scrollbar-corner,
+    .chat-list::-webkit-scrollbar-corner {
+      background: transparent;
+    }
+    
+    .read-receipt {
+      font-size: 12px;
+      color: #888;
+      margin-top: 4px;
+    }
+
+    .chat-input {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .chat-input input {
+      flex: 1;
+      padding: 12px;
+      border-radius: 25px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+
+    .chat-input button {
+      background: #7b6df0;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 25px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.2s;
+    }
+
+    .chat-input button:hover {
+      background: #5c4fe3;
+    }
+
+    .home-button {
+      width: 30px;
+      height: 30px;
+    }
+
+    .home-button img {
+      width: 100%;
+      filter: brightness(0);
+      cursor: pointer;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(0, 0, 0, 0.4);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .modal-box {
+      background: white;
+      border-radius: 20px;
+      padding: 30px;
+      width: 300px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+      text-align: center;
+    }
+
+    .modal-text {
+      font-size: 16px;
+      color: #333;
+      margin-bottom: 25px;
+    }
+
+    .modal-buttons {
+      display: flex;
+      justify-content: space-around;
+      gap: 20px;
+    }
+
+    .cancel-btn,
+    .delete-btn {
+      padding: 8px 20px;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .cancel-btn {
+      background-color: #ccc;
+    }
+
+    .delete-btn {
+      background-color: #7b6df0;
+    }
+
+    .view-inline {
+      padding: 4px 10px;
+      font-size: 13px;
+      background-color: #f2ecff;
+      color: #4b0082;
+      border: 1px solid #d7cfff;
+      border-radius: 20px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      box-shadow: 0 2px 4px rgba(200, 160, 255, 0.2);
+      cursor: pointer;
+      white-space: nowrap;
+      margin-left: 6px;
+    }
+
+    .view-inline:hover {
+      background-color: #e9defc;
+      transform: scale(1.03);
+      transition: 0.2s ease;
+    }
+
+    .popup-background {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.4);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+    }
+    .popup-card {
+      background: white;
+      border-radius: 20px;
+      padding: 30px;
+      width: 400px;
+      max-width: 90%;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      position: relative;
+      text-align: center;
+    }
+    .close-btn {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      font-size: 24px;
+      cursor: pointer;
+    }
+
+    .name-row{
+      display:flex;
+      align-items:center;
+      gap:6px;
+    }
+    .confirm-button{
+      padding: 8px 14px;
+      background:#7b6df0;
+      color:#fff;
+      border:none;
+      border-radius:18px;
+      font-size:14px;
+      font-weight:700;
+      cursor:pointer;
+    }
+    .confirm-button:hover{ background:#5c4fe3; }
+    .confirm-button:disabled{ opacity:.6; cursor:not-allowed; }
+
+    .btn-accept, .btn-reject {
+    margin: 0 8px;
+    padding: 6px 14px;
+    border: none;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  .btn-accept { background:#7b6df0; color:#fff; }
+  .btn-accept:hover { background:#5c4fe3; }
+  .btn-reject { background:#e57373; color:#fff; }
+  .btn-reject:hover { background:#d64f4f; }
+
+  /* 버튼 박스: 중앙 정렬 + 위쪽 여백 */
+  .btn-box {
+    margin-top: 12px;
+    text-align: center;
+  }
+      #noticeModal {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.4);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 2000;
+    }
+
+    #noticeModal .modal-box {
+      background: #fff;
+      border-radius: 18px;
+      padding: 32px 28px;
+      width: 340px;
+      text-align: center;
+      box-shadow: 0 8px 30px rgba(123, 109, 240, 0.25);
+      animation: fadeIn 0.25s ease;
+    }
+
+    #noticeModal .modal-text {
+      font-size: 16px;
+      color: #333;
+      margin-bottom: 22px;
+      line-height: 1.6;
+    }
+
+    #noticeModal .modal-buttons button {
+      background: #7b6df0;
+      border: none;
+      color: #fff;
+      font-weight: 600;
+      padding: 10px 28px;
+      border-radius: 12px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    #noticeModal .modal-buttons button:hover {
+      background: #5c4fe3;
+    }
+
+    /* 살짝 fade 효과 */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+  /* ===== Header actions ===== */
+    .header-actions{ display:flex; align-items:center; gap:12px; }
+
+    /* find_roommate의 like 버튼과 톤 맞추기 */
+    .header-like-btn{
+      width:36px; height:36px;
+      border:none; border-radius:50%;
+      background:#efeaff;
+      display:flex; align-items:center; justify-content:center;
+      cursor:pointer;
+      box-shadow:0 2px 8px rgba(0,0,0,.08);
+      transition:transform .15s ease, opacity .15s ease, background .15s ease;
+      font-size:18px; line-height:1; color:#bdbdbd;
+    }
+    .header-like-btn:hover{ transform:translateY(-1px); opacity:.95; background:#e9defc; }
+    .header-like-btn.liked{ color:#ff4d6d; } /* ❤️일 때의 색상(카드와 동일) */
+
+    .confirm-button.is-done{ background:#cfc9ff; cursor:not-allowed; }
+
+    .message.outgoing { position: relative; }
+
+    #center-toast{ display:none; position:fixed; inset:0; z-index:2000; justify-content:center; align-items:center; }
+    #center-toast .toast-card{ background:#fff; border:1px solid #efeaff; border-radius:18px; padding:22px 26px; box-shadow:0 12px 40px rgba(0,0,0,.25); }
+    #center-toast .toast-text{ font-size:16px; color:#9a1b1b; background:#fdeff0; border-radius:12px; padding:12px 16px; font-weight:700; text-align:center; }
+    #center-toast .toast-actions{ text-align:center; margin-top:14px; }
+ </style>
+</head>
+<body>
+<div class="chat-wrapper">
+  <div class="chat-sidebar">
+    <div class="sidebar-title">Mate Talk</div>
+    <div class="chat-list">
+      {% if chat_users %}
+          {% for u in chat_users %}
+            {% if u.id %}
+              <div class="chat-user" onclick="location.href='{% url 'chat_room' u.id %}'">
+                <!-- (1) 왼쪽: 이름 + 최근 메시지 -->
+                <div>
+                  <div class="name-row">
+                    <span class="name">{{ u.nickname }}</span>
+                    <button class="view-inline js-view-profile" data-user-id="{{ u.profile_id }}" onclick="event.stopPropagation()">
+                      🔍 <span style="font-size: 13px;">프로필 보기</span>
+                    </button>
+                  </div>
+                  <div class="last-message" style="font-size:13px;color:#777;margin-top:3px;">
+                    {{ u.latest_text }}
+                  </div>
+                </div>
+
+                <!-- (2) 오른쪽: 🔍 + 안읽음 -->
+                <div style="display:flex;align-items:center;gap:8px;">
+                  {% if u.unread_count > 0 %}
+                    <div class="unread">{{ u.unread_count }}</div>
+                  {% endif %}
+                </div>
+              </div>
+            {% endif %}
+          {% endfor %}
+        {% else %}
+          <div style="text-align:center;color:#999;">대화 내역 없음</div>
+        {% endif %}
+    </div>
+  </div>
+
+    <div class="chat-main">
+      {% if target_profile %}
+        <!-- 유저 선택된 경우 -->
+        <div class="chat-header">
+          💬 {{ target_profile.nickname }} 님과의 채팅
+          <div class="header-actions">
+            <a href="{% url 'liked_list' %}" class="chat-favorite-button">찜 목록</a>
+
+            {% if target_user %}
+              <!-- ✅ 하트 토글 (find와 동일한 🤍/❤️) -->
+              <button id="btn-like-toggle"
+                      class="header-like-btn {% if is_liked_target %}liked{% endif %}"
+                      data-user-id="{{ target_profile.id }}"
+                      aria-pressed="{{ is_liked_target|yesno:'true,false' }}"
+                      title="찜하기">
+                {% if is_liked_target %}❤️{% else %}🤍{% endif %}
+              </button>
+
+              <button id="btn-request" class="confirm-button
+               {% if from_user.userprofile.confirmed_with_id %}is-done{% elif not can_request %}is-done{% endif %}"
+                        {% if from_user.userprofile.confirmed_with_id or not can_request %}disabled aria-disabled="true"{% endif %}
+                        data-state="{% if from_user.userprofile.confirmed_with_id or not can_request %}done{% else %}ready{% endif %}">
+                    {% if from_user.userprofile.confirmed_with_id or not can_request %}
+                        확정완료
+                    {% else %}
+                        확정하기
+                    {% endif %}
+               </button>
+
+              <!-- ✅ 홈 아이콘 (맨 오른쪽) -->
+                <a href="{% url 'home' %}" class="home-button" aria-label="홈으로 이동" style="width:28px;height:28px;">
+                  <img src="https://img.icons8.com/material-outlined/24/000000/home--v2.png" alt="홈으로" style="width:100%;height:100%;filter:brightness(0);" />
+                </a>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="chat-messages" id="chat-box">
+          {% for message in messages %}
+            {% if message.sender == from_user %}
+              <div class="message outgoing" data-id="{{ message.id }}">
+                {{ message.text }}
+                {% if forloop.last and message.is_read %}
+                  <div class="read-receipt">읽음</div>
+                {% endif %}
+              </div>
+            {% else %}
+              <div class="message incoming" data-id="{{ message.id }}">{{ message.text }}</div>
+            {% endif %}
+          {% endfor %}
+        </div>
+
+        <form id="chat-form" class="chat-input" action="{% url 'send_message' target_user.id %}" method="post">
+            {% csrf_token %}
+            <input type="text" name="message" placeholder="메시지를 입력하세요"
+                   autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+            <button type="submit">전송</button>
+        </form>
+
+      {% else %}
+        <!-- 유저 선택 안 된 경우 -->
+        <div class="chat-header" style="justify-content: space-between;">
+            <span style="color: #7b6df0;">💬 채팅할 상대를 선택해주세요!</span>
+            <a href="/" class="home-button">
+            <img src="https://img.icons8.com/material-outlined/24/000000/home--v2.png" alt="홈으로" />
+          </a>
+        </div>
+        <div class="chat-messages" style="flex: 1; display: flex; justify-content: center; align-items: center;">
+          <p style="color: #aaa; font-size: 16px;">왼쪽 목록에서 대화할 상대를 골라주세요.</p>
+        </div>
+      {% endif %}
+    </div>
+
+      <div id="deleteModal" class="modal-overlay">
+        <div class="modal-box">
+          <p class="modal-text">이 메시지를 삭제하시겠습니까?</p>
+          <div class="modal-buttons">
+            <button onclick="closeDeleteModal()" class="cancel-btn">취소</button>
+            <button onclick="confirmDelete()" class="delete-btn">삭제</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="profile-popup" class="popup-background" style="display: none;">
+      <div class="popup-card">
+        <span class="close-btn">&times;</span>
+        <div id="popup-content"></div>
+      </div>
+      </div>
+    <!-- ✅ 가운데 토스트 -->
+      <div id="center-toast">
+        <div class="toast-card">
+          <div id="center-toast-text" class="toast-text">안내</div>
+          <div class="toast-actions">
+            <button id="center-toast-close" class="confirm-button" style="padding:8px 18px;">확인</button>
+          </div>
+        </div>
+      </div>
+</div>
+
+<script>
+
+    const MY_NAME = "{{ my_nickname|escapejs }}";
+  /* =========================
+   *  공통: 가운데 공지 모달
+   * ========================= */
+  function ensureNoticeModal() {
+    let overlay = document.getElementById("noticeModal");
+    if (overlay) return overlay;
+
+    overlay = document.createElement("div");
+    overlay.id = "noticeModal";
+    overlay.className = "modal-overlay";
+    overlay.style.display = "none";
+    overlay.innerHTML = `
+      <div class="modal-box">
+        <p class="modal-text" id="noticeModalText"></p>
+        <div class="modal-buttons" style="justify-content:center;">
+          <button id="noticeOkBtn" class="delete-btn" style="min-width:90px;">확인</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    overlay.querySelector("#noticeOkBtn").addEventListener("click", () => {
+      overlay.style.display = "none";
+    });
+    overlay.addEventListener("click", (e) => {
+      if (e.target === overlay) overlay.style.display = "none";
+    });
+
+    return overlay;
+  }
+  function showNotice(msg) {
+    const overlay = ensureNoticeModal();
+    overlay.querySelector("#noticeModalText").textContent = msg;
+    overlay.style.display = "flex";
+  }
+  // ✅ 확인 모달(버튼 2개)
+  function showConfirm(msg, onOk){
+    const overlay = ensureNoticeModal();
+    const box = overlay.querySelector(".modal-box");
+    const btnArea = overlay.querySelector(".modal-buttons");
+    const textEl = overlay.querySelector("#noticeModalText");
+
+    btnArea.innerHTML = `
+      <button id="noticeCancelBtn" class="cancel-btn" style="min-width:90px;background:#c7c7c7;">취소</button>
+      <button id="noticeOkRealBtn" class="delete-btn" style="min-width:90px;">확인</button>
+    `;
+    textEl.textContent = msg;
+    overlay.style.display = "flex";
+
+    const ok = btnArea.querySelector("#noticeOkRealBtn");
+    const cancel = btnArea.querySelector("#noticeCancelBtn");
+    const close = () => {
+      overlay.style.display = "none";
+      // 원래(확인 1개)로 복원
+      btnArea.innerHTML = `<button id="noticeOkBtn" class="delete-btn" style="min-width:90px;">확인</button>`;
+      btnArea.querySelector("#noticeOkBtn").addEventListener("click", () => (overlay.style.display="none"));
+    };
+    cancel.addEventListener("click", close);
+    ok.addEventListener("click", () => { try{ onOk && onOk(); } finally{ close(); } });
+  }
+
+  // 🔒 프론트에서 보호할 시스템 메시지 키워드
+  const SYSTEM_PROTECTED_PHRASES = [
+    "룸메이트 확정을 요청했습니다.",
+    "룸메이트 확정 요청을 보냈습니다",
+    "응답을 기다리는 중",
+    "룸메이트 확정 요청을 수락했습니다",
+    "룸메이트 확정 요청을 거절했습니다",
+    "룸메이트 확정을 취소했습니다",
+    "룸메이트 확정이 완료되었습니다",
+  ];
+
+  let targetMessageId = null;
+
+  // 🔹 메시지 클릭 시 모달 열기(삭제)
+  function openDeleteModal(event, messageId) {
+    event.preventDefault();
+    targetMessageId = messageId;
+    document.getElementById("deleteModal").style.display = "flex";
+  }
+
+  // 🔹 삭제 확정
+  function confirmDelete() {
+    if (!targetMessageId) return;
+
+    fetch(`/delete_message/${targetMessageId}/`, {
+      method: "POST",
+      headers: {
+        "X-CSRFToken": "{{ csrf_token }}",
+        "Accept": "application/json",
+      },
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.success) {
+          location.reload();
+        } else {
+          showNotice(data.error || "삭제에 실패했습니다.");
+        }
+      })
+      .catch(() => showNotice("네트워크 오류가 발생했습니다."))
+      .finally(() => closeDeleteModal());
+  }
+
+  // 🔹 모달 닫기(삭제)
+  function closeDeleteModal() {
+    const modal = document.getElementById("deleteModal");
+    modal.style.display = "none";
+    targetMessageId = null;
+  }
+
+  // 🔹 우클릭 삭제(내 메시지에만) — 시스템 메시지는 막기
+  document.addEventListener("DOMContentLoaded", () => {
+    const box = document.getElementById("chat-box");
+    if (!box) return;
+
+    box.addEventListener("contextmenu", (e) => {
+      const bubble = e.target.closest(".message.outgoing");
+      if (!bubble) return;
+
+      const txt = (bubble.textContent || "").trim();
+      if (SYSTEM_PROTECTED_PHRASES.some(p => txt.includes(p))) {
+        e.preventDefault();
+        return; // 시스템 메시지는 삭제 금지
+      }
+
+      e.preventDefault();
+      openDeleteModal(e, bubble.dataset.id);
+    });
+  });
+
+  // 🔹 읽음표시 5초 후 숨김
+  document.addEventListener("DOMContentLoaded", () => {
+    const receipt = document.querySelector(".read-receipt");
+    if (receipt) setTimeout(() => { receipt.style.display = "none"; }, 5000);
+  });
+
+  // 🔍 프로필 팝업
+  (function () {
+    const viewButtons = document.querySelectorAll(".js-view-profile");
+    const popup = document.getElementById("profile-popup");
+    const popupContent = document.getElementById("popup-content");
+    const closeBtn = document.querySelector(".close-btn");
+
+    viewButtons.forEach((button) => {
+      button.addEventListener("click", function () {
+        const profileId = this.dataset.userId;
+        fetch(`/get_profile/${profileId}/`)
+          .then((res) => res.json())
+          .then((data) => {
+            popupContent.innerHTML = `
+              <div style="display:flex;align-items:center;gap:24px;">
+                <div style="font-size:72px;">${data.profile_emoji || "👤"}</div>
+                <div style="text-align:left;">
+                  <h2 style="margin:0;">${data.nickname}</h2>
+                  <div style="display:grid;grid-template-columns:100px auto;gap:4px 16px;font-size:16px;margin-top:8px;">
+                    <div><strong>학년/학기</strong></div><div>${data.semester}</div>
+                    <div><strong>나이</strong></div><div>${data.birth_year}년생</div>
+                    <div><strong>성별</strong></div><div>${data.gender}</div>
+                    <div><strong>기숙사</strong></div><div>${data.dorm_type}</div>
+                  </div>
+                </div>
+              </div>
+              <div style="margin-top:20px;display:flex;flex-wrap:wrap;gap:10px;">
+                ${(data.keyword_tags || "")
+                  .split(" ")
+                  .map(tag => `<span style="background:#eee9fb;color:#5f4d9d;font-size:13px;padding:6px 12px;border-radius:16px;">${tag}</span>`)
+                  .join("")}
+              </div>
+            `;
+            popup.style.display = "flex";
+          });
+      });
+    });
+
+    closeBtn?.addEventListener("click", () => (popup.style.display = "none"));
+    popup?.addEventListener("click", (e) => {
+      if (e.target === popup) popup.style.display = "none";
+    });
+  })();
+
+  // 🔹 채팅창 진입 시 맨 아래로
+  document.addEventListener("DOMContentLoaded", () => {
+    const box = document.querySelector(".chat-messages");
+    if (box) box.scrollTop = box.scrollHeight;
+  });
+
+  // =========================
+  //  전송을 Ajax로
+  // =========================
+  (function () {
+    const form = document.getElementById("chat-form");
+    const list = document.getElementById("chat-box");
+    if (!form || !list) return;
+
+    const input = form.querySelector('input[name="message"]');
+    const url = form.getAttribute("action");
+
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      const text = (input.value || "").trim();
+      if (!text) return;
+
+      const fd = new FormData(form);
+
+      fetch(url, {
+        method: "POST",
+        body: fd,
+        headers: {
+          "X-Requested-With": "XMLHttpRequest",
+          "X-CSRFToken": "{{ csrf_token }}",
+        },
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (!data.success) return;
+
+          const bubble = document.createElement("div");
+          bubble.className = "message outgoing";
+          bubble.setAttribute("data-id", data.id);
+          bubble.textContent = data.text;
+          list.appendChild(bubble);
+
+          input.value = "";
+          input.focus();
+          list.scrollTop = list.scrollHeight;
+        })
+        .catch(() => showNotice("메시지 전송 중 오류가 발생했습니다."));
+    });
+  })();
+
+    <!-- ---------------- 상대가 선택된 경우만 실행 ---------------- -->
+    {% if target_user %}
+
+      (function injectInlineCancelStyle(){
+        const id = "inline-cancel-style";
+        document.getElementById(id)?.remove();
+        const s = document.createElement("style");
+        s.id = id;
+        s.textContent = `
+          .message.outgoing{ position:relative; overflow:visible; }
+          .inline-cancel{
+            position:absolute; right: calc(100% + 10px); top:50%;
+            transform: translateY(-50%); padding:6px 12px;
+            font-size:12px; font-weight:700; border:none; border-radius:12px;
+            background:#ffe3e6; color:#b2344b; cursor:pointer;
+            box-shadow:0 1px 4px rgba(0,0,0,.08); white-space: nowrap; z-index:1;
+          }
+          .inline-cancel:hover{ background:#ffd4da; }
+        `;
+        document.head.appendChild(s);
+      })();
+
+      (function () {
+        const list = document.getElementById("chat-box");
+        if (!list) return;
+
+        const pollUrl          = "{% url 'chat_poll' target_user.id %}";
+        const requestBtn       = document.getElementById("btn-request");
+        const TARGET_NAME      = "{{ target_profile.nickname }}";
+        const MY_CONFIRMED     = {{ from_user.userprofile.confirmed_with_id|yesno:"true,false"|default:"false" }};
+        const TARGET_CONFIRMED = {{ target_profile.confirmed_with_id|yesno:"true,false"|default:"false" }};
+        let hasPendingIncoming = {{ pending_incoming|yesno:"true,false" }};
+        let hasPendingOutgoing = {{ pending_outgoing|yesno:"true,false" }};
+
+        const ANY_PENDING_GLOBAL = {{ has_any_pending_outgoing|yesno:"true,false" }};
+        let anyPending = ANY_PENDING_GLOBAL;
+
+        /* ---------- 버튼 상태 ---------- */
+        function setBtnState(state){
+          if (!requestBtn) return;
+          if (state === 'done'){ // 확정완료
+            requestBtn.disabled = true;
+            requestBtn.classList.add('is-done');
+            requestBtn.setAttribute('aria-disabled','true');
+            requestBtn.dataset.state = 'done';
+            requestBtn.textContent = '확정완료';
+          } else if (state === 'waiting'){ // 확정 대기중
+            requestBtn.disabled = true;
+            requestBtn.classList.remove('is-done');
+            requestBtn.setAttribute('aria-disabled','true');
+            requestBtn.dataset.state = 'waiting';
+            requestBtn.textContent = '확정 대기중';
+          } else { // enabled
+            requestBtn.disabled = false;
+            requestBtn.classList.remove('is-done');
+            requestBtn.removeAttribute('aria-disabled');
+            requestBtn.dataset.state = 'ready';
+            requestBtn.textContent = '확정하기';
+          }
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+          if (!requestBtn) return;
+          if (MY_CONFIRMED) {
+            setBtnState('done');
+          } else if (anyPending && !hasPendingOutgoing) {
+            // 다른 방에서 대기중이 있으면 이 방은 비활성(확정 대기중)
+            setBtnState('waiting');
+          } else {
+            setBtnState('enabled');
+          }
+        });
+
+        function normText(elOrStr){
+          if (typeof elOrStr === 'string') {
+            return elOrStr.replace(/\s*읽음\s*$/,'').trim();
+          }
+          const clone = elOrStr.cloneNode(true);
+          clone.querySelectorAll('.inline-cancel, .btn-box').forEach(n => n.remove());
+          return (clone.textContent || '').replace(/\s*읽음\s*$/,'').trim();
+        }
+        function isMyRequestSentence(txt){
+          return /룸메이트 확정을 요청했습니다\.$/.test(normText(txt));
+        }
+        function getLastId() {
+          const bubblesWithId = list.querySelectorAll('.message[data-id]');
+          const last = bubblesWithId[bubblesWithId.length - 1];
+          return last ? (parseInt(last.getAttribute('data-id')) || 0) : 0;
+        }
+        function isNearBottom() {
+          const threshold = 60;
+          return list.scrollHeight - list.scrollTop - list.clientHeight < threshold;
+        }
+
+        /* ---------- '요청 취소' 버튼 앵커 고정 ---------- */
+        let cancelAnchor = null;
+        function clearAllCancelButtons(){
+          document.querySelectorAll('#chat-box .inline-cancel').forEach(el => el.remove());
+        }
+        function attachCancelTo(el){
+          if (!el) return;
+          if (cancelAnchor === el && el.querySelector('.inline-cancel')) return; // 이미 달림
+          clearAllCancelButtons();
+          const btn = document.createElement('button');
+          btn.className = 'inline-cancel';
+          btn.type = 'button';
+          btn.textContent = '요청 취소';
+          btn.addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            showConfirm('확정 요청을 취소하시겠습니까?', () => cancelPendingRequest(el));
+          });
+          el.appendChild(btn);
+          cancelAnchor = el;
+        }
+        function releaseCancelAnchor(){
+          cancelAnchor = null;
+          clearAllCancelButtons();
+        }
+
+        /* ---------- 확정 요청 보내기 ---------- */
+        if (requestBtn) {
+          requestBtn.addEventListener("click", () => {
+            if (requestBtn.dataset.busy === "1") return;
+
+            if (anyPending && !hasPendingOutgoing) {
+              showNotice("이미 다른 상대에게 확정 요청을 보낸 상태예요. 답변을 기다려 주세요.");
+              return;
+            }
+
+            if (MY_CONFIRMED)     { showNotice("이미 다른 룸메이트와 확정되어 있어요. 확정은 1명만 가능합니다."); return; }
+            if (TARGET_CONFIRMED) { showNotice(`${TARGET_NAME} 님은 이미 다른 룸메이트와 확정되었습니다.`); return; }
+
+            requestBtn.dataset.busy = "1";
+            requestBtn.disabled = true;
+
+            fetch("{% url 'roommate_request' target_user.id %}", {
+              method: "POST",
+              headers: { "X-CSRFToken": "{{ csrf_token }}", "X-Requested-With": "XMLHttpRequest" },
+            })
+            .then(r => r.json())
+            .then(data => {
+              if (!data.success) {
+                if ((data.message || "").includes("이미 확정된")) {
+                  showNotice(`${TARGET_NAME} 님은 이미 다른 룸메이트와 확정되었습니다.`);
+                } else if ((data.message || "").includes("대기 중인 요청")) {
+                  showNotice("이미 대기 중인 요청이 있어요. 상대의 응답을 기다려 주세요.");
+                } else {
+                  showNotice(data.message || "요청에 실패했습니다.");
+                }
+                requestBtn.disabled = false;
+                requestBtn.dataset.busy = "0";
+                return;
+              }
+
+              anyPending = true;
+              hasPendingOutgoing = true;
+              setBtnState('waiting');
+
+              const temp = document.createElement("div");
+              temp.className = "message outgoing";
+              temp.dataset.temp = "1";
+              temp.textContent = `${MY_NAME} 님이 룸메이트 확정을 요청했습니다.`;
+              list.appendChild(temp);
+
+              const wait = document.createElement("div");
+              wait.className = "message outgoing";
+              wait.dataset.waiting = "1";
+              wait.textContent = `${TARGET_NAME} 님에게 확정 요청을 보냈습니다. 응답을 기다리는 중…`;
+              list.appendChild(wait);
+
+              attachCancelTo(temp);
+
+              list.scrollTop = list.scrollHeight;
+            })
+
+            .catch(() => {
+              showNotice("요청 중 오류가 발생했습니다.");
+              requestBtn.disabled = false;
+              requestBtn.dataset.busy = "0";
+            });
+          });
+        }
+
+        /* ---------- 수락/거절 버튼 (B 화면) ---------- */
+        function decorateAcceptButtons() {
+          if (!hasPendingIncoming) return;
+
+          const candidates = Array
+            .from(list.querySelectorAll(".message.incoming"))
+            .filter(b => isMyRequestSentence(b));
+          if (candidates.length === 0) return;
+
+          const last = candidates[candidates.length - 1];
+
+          candidates.slice(0, -1).forEach(b => {
+            b.dataset.enhanced = "old";
+            b.querySelector(".btn-box")?.remove();
+          });
+          if (last.dataset.enhanced === "1" || last.dataset.enhanced === "done") return;
+
+          const btnBox = document.createElement("div");
+          btnBox.className = "btn-box";
+          btnBox.style.marginTop = "12px";
+          btnBox.style.textAlign = "center";
+
+          const btnAccept = document.createElement("button");
+          btnAccept.className = "btn-accept";
+          btnAccept.textContent = "수락";
+
+          const btnReject = document.createElement("button");
+          btnReject.className = "btn-reject";
+          btnReject.textContent = "거절";
+
+          btnBox.appendChild(btnReject);
+          btnBox.appendChild(btnAccept);
+          last.appendChild(btnBox);
+          last.dataset.enhanced = "1";
+
+          const removeWaitingMessage = () => {
+            list.querySelectorAll(".message.outgoing").forEach((msg) => {
+              if (normText(msg).includes("응답을 기다리는 중")) msg.remove();
+            });
+          };
+
+          // 수락
+          btnAccept.addEventListener("click", () => {
+            btnAccept.disabled = true; btnReject.disabled = true;
+            fetch("{% url 'roommate_accept' target_user.id %}", {
+              method: "POST",
+              headers: { "X-CSRFToken": "{{ csrf_token }}", "X-Requested-With": "XMLHttpRequest" },
+            })
+            .then(r => r.json())
+            .then(data => {
+              if (!data.success) { showNotice(data.message || "수락에 실패했습니다."); btnAccept.disabled = btnReject.disabled = false; return; }
+              btnBox.remove(); last.dataset.enhanced = "done";
+              hasPendingIncoming = false;
+              hasPendingOutgoing = false;
+              anyPending = false;
+              setBtnState('enabled');
+              releaseCancelAnchor();
+              removeWaitingMessage();
+
+              const out = document.createElement("div");
+              out.className = "message outgoing";
+              out.dataset.temp = "acc";
+              out.textContent = `${MY_NAME} 님이 룸메이트 확정 요청을 수락했습니다. 룸메이트 확정 완료!`;
+              list.appendChild(out);
+              list.scrollTop = list.scrollHeight;
+            })
+            .catch(() => { showNotice("수락 중 오류가 발생했습니다."); btnAccept.disabled = btnReject.disabled = false; });
+          });
+
+          // 거절
+          btnReject.addEventListener("click", () => {
+            btnAccept.disabled = true; btnReject.disabled = true;
+            fetch("{% url 'roommate_reject' target_user.id %}", {
+              method: "POST",
+              headers: { "X-CSRFToken": "{{ csrf_token }}", "X-Requested-With": "XMLHttpRequest" },
+            })
+            .then(r => r.json())
+            .then(data => {
+              if (!data.success) { showNotice(data.message || "거절에 실패했습니다."); btnAccept.disabled = btnReject.disabled = false; return; }
+              btnBox.remove(); last.dataset.enhanced = "done";
+              hasPendingIncoming = false;
+              hasPendingOutgoing = false;
+              anyPending = false;
+              setBtnState('enabled');
+              releaseCancelAnchor();
+              removeWaitingMessage();
+
+              const out = document.createElement("div");
+              out.className = "message outgoing";
+              out.dataset.temp = "rej";
+              out.textContent = `${MY_NAME} 님이 룸메이트 확정 요청을 거절했습니다.`;
+              list.appendChild(out);
+              list.scrollTop = list.scrollHeight;
+            })
+            .catch(() => { showNotice("거절 중 오류가 발생했습니다."); btnAccept.disabled = btnReject.disabled = false; });
+          });
+        }
+
+        /* ---------- 요청 취소 버튼 (A 화면) ---------- */
+        function decorateCancelButtons(){
+          if (!hasPendingOutgoing) { releaseCancelAnchor(); return; }
+
+          const candidates = Array
+            .from(document.querySelectorAll("#chat-box .message.outgoing"))
+            .filter(b => isMyRequestSentence(b));
+
+          if (candidates.length === 0) {
+            if (cancelAnchor && list.contains(cancelAnchor)) return;
+            releaseCancelAnchor();
+            return;
+          }
+
+          const newest = candidates[candidates.length - 1];
+          attachCancelTo(newest); // 최신에만 고정
+        }
+
+        function cancelPendingRequest(requestBubble){
+          fetch("{% url 'roommate_request_cancel' target_user.id %}", {
+            method: "POST",
+            headers: { "X-CSRFToken": "{{ csrf_token }}", "X-Requested-With": "XMLHttpRequest" },
+          })
+          .then(r => r.json())
+          .then(data => {
+            if (!data.success){ showNotice(data.message || "요청 취소에 실패했습니다."); return; }
+
+            try { requestBubble.remove(); } catch(e){}
+            list.querySelectorAll(".message").forEach(b => {
+              if (normText(b).includes("응답을 기다리는 중")) { try { b.remove(); } catch(e){} }
+            });
+
+            hasPendingOutgoing = false;
+            anyPending = false;
+            setBtnState('enabled');
+            releaseCancelAnchor();
+            showNotice("확정 요청을 취소했습니다.");
+          })
+          .catch(() => showNotice("요청 취소 중 오류가 발생했습니다."));
+        }
+
+        /* ---------- 폴링 ---------- */
+        function poll() {
+          fetch(`${pollUrl}?after=${getLastId()}`, { headers: { "X-Requested-With": "XMLHttpRequest" } })
+            .then(r => r.json())
+            .then(({ messages }) => {
+              if (!messages || !messages.length) return;
+
+              const stick = isNearBottom();
+              messages.forEach((m) => {
+                if (m.mine && isMyRequestSentence(m.text || '')) {
+                  const tempBubble = list.querySelector('.message.outgoing[data-temp="1"]');
+                  if (tempBubble) {
+                    tempBubble.setAttribute('data-id', m.id);
+                    tempBubble.removeAttribute('data-temp');
+                    attachCancelTo(tempBubble);
+                    return;
+                  }
+                }
+
+                // 임시 수락/거절 승격
+                if (m.mine && /\b확정 요청을 거절했습니다\.?$/.test(normText(m.text || ""))) {
+                  const tmp = list.querySelector('.message.outgoing[data-temp="rej"]');
+                  if (tmp) { tmp.setAttribute('data-id', m.id); tmp.removeAttribute('data-temp'); return; }
+                }
+                if (m.mine && /확정 요청을 수락했습니다/.test(normText(m.text || ""))) {
+                  const tmp = list.querySelector('.message.outgoing[data-temp="acc"]');
+                  if (tmp) { tmp.setAttribute('data-id', m.id); tmp.removeAttribute('data-temp'); return; }
+                }
+
+                // 상대가 내 요청에 응답 → 버튼/대기문구 정리
+                if (!m.mine && /(확정 요청을 거절했습니다|확정 요청을 수락했습니다|확정이 완료되었습니다)/.test(normText(m.text || ""))) {
+                  hasPendingOutgoing = false;
+                  anyPending = false;
+                  setBtnState('enabled');
+                  releaseCancelAnchor();
+                  document.querySelectorAll('#chat-box .message.outgoing').forEach(b=>{
+                    if (normText(b).includes("응답을 기다리는 중")) b.remove();
+                  });
+                }
+
+                // 새 '상대가 보낸 요청' 감지
+                if (!m.mine && isMyRequestSentence(m.text || '')) {
+                  hasPendingIncoming = true;
+                }
+
+                // 일반 메시지 추가
+                const div = document.createElement('div');
+                div.className = `message ${m.mine ? 'outgoing' : 'incoming'}`;
+                div.setAttribute('data-id', m.id);
+                div.textContent = m.text;
+                list.appendChild(div);
+              });
+
+              if (stick) list.scrollTop = list.scrollHeight;
+
+              decorateAcceptButtons();
+              decorateCancelButtons();
+            })
+            .catch(() => { /* silent */ });
+        }
+
+        // 초기 실행
+        decorateAcceptButtons();
+        decorateCancelButtons();
+
+        // 새로고침해도 보이게 ‘대기’ 버블 복원
+        if (hasPendingOutgoing && !list.querySelector('.message.outgoing[data-waiting="1"]')) {
+          const waitRestore = document.createElement('div');
+          waitRestore.className = 'message outgoing';
+          waitRestore.dataset.waiting = '1';
+          waitRestore.textContent = `${TARGET_NAME} 님에게 확정 요청을 보냈습니다. 응답을 기다리는 중…`;
+          list.appendChild(waitRestore);
+          list.scrollTop = list.scrollHeight;
+        }
+
+        // 초기 로딩 시에도 최신 '요청했습니다'가 있으면 앵커 달아주기
+        if (hasPendingOutgoing) {
+          const existing = Array
+            .from(document.querySelectorAll('#chat-box .message.outgoing'))
+            .filter(b => isMyRequestSentence(b));
+          if (existing.length) attachCancelTo(existing[existing.length - 1]);
+        }
+
+        poll();
+        setInterval(poll, 2000);
+      })();
+
+
+    {% endif %}
+    <!-- ---------------- /상대가 선택된 경우만 실행 ---------------- -->
+
+
+  // =======================
+  //  하트 찜 토글
+  // =======================
+  (function () {
+    const likeBtn = document.getElementById("btn-like-toggle");
+    if (!likeBtn) return;
+
+    const likeUrl = `/like/${likeBtn.dataset.userId}/`;
+
+    likeBtn.addEventListener("click", async () => {
+      const liked = likeBtn.classList.contains("liked");
+      try {
+        const res = await fetch(likeUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": "{{ csrf_token }}",
+          },
+          body: JSON.stringify({ action: liked ? "unlike" : "like" }),
+        });
+        const data = await res.json();
+        if (!data.success) {
+          showNotice(data.message || "처리 중 오류가 발생했습니다.");
+          return;
+        }
+        likeBtn.classList.toggle("liked");
+        likeBtn.textContent = likeBtn.classList.contains("liked") ? "❤️" : "🤍";
+        likeBtn.setAttribute(
+          "aria-pressed",
+          likeBtn.classList.contains("liked") ? "true" : "false"
+        );
+      } catch (e) {
+        showNotice("네트워크 오류가 발생했습니다.");
+      }
+    });
+  })();
+
+</script>
+
+</body>
+</html>
